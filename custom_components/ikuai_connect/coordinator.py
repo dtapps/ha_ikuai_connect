@@ -7,7 +7,7 @@ from typing import Any
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.helpers.device_registry import DeviceInfo
-from .helpers import extract_name_from_label, normalize_mac
+from .helpers import decode_term_name, extract_name_from_label, normalize_mac
 from .const import (
     DOMAIN,
     LOGGER,
@@ -207,9 +207,9 @@ class IkuaiCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     mac_l = normalize_mac(c["mac"])
                     
                     fallback_name = (
-                        c.get("termname") 
-                        or c.get("client_model") 
-                        or extract_name_from_label(c.get("comment")) 
+                        decode_term_name(c.get("termname"))
+                        or decode_term_name(c.get("client_model"))
+                        or extract_name_from_label(c.get("comment"))
                         or f"Client {mac_l.replace(':', '')[-4:]}"
                     )
                     c["display_name"] = fallback_name

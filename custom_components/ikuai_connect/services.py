@@ -8,6 +8,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, LOGGER
 from .coordinator import IkuaiCoordinator
+from .helpers import decode_term_name
 
 def _get_coordinator(hass: HomeAssistant, device_id: str | None = None) -> IkuaiCoordinator:
     """根据 device_id 获取对应 coordinator，未指定时自动选择唯一 entry."""
@@ -50,7 +51,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             "total_flow_mb": round(res.get("terminal_total_flow", 0) / 1024 / 1024, 2),
             "devices": [
                 {
-                    "name": d.get("comment") or d.get("termname") or d.get("mac"),
+                    "name": d.get("comment") or decode_term_name(d.get("termname")) or d.get("mac"),
                     "ip": d.get("ip_addr"),
                     "mac": d.get("mac"),
                     "total_mb": round(d.get("sum_total", 0) / 1024 / 1024, 2),
@@ -102,8 +103,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
         for d in raw_history:
             name = (
-                d.get("termname")
-                or d.get("client_model")
+                decode_term_name(d.get("termname"))
+                or decode_term_name(d.get("client_model"))
                 or d.get("comment")
                 or f"Client {d.get('mac', '')[-5:]}"
             )

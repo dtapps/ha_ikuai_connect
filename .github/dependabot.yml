@@ -1,0 +1,12 @@
+version: 2
+
+updates:
+
+  # Python 依赖（扫描根目录下的 pyproject.toml 与 requirements*.txt）
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    labels:
+      - "dependencies"
+      - "python"

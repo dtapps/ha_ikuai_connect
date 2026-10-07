@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER
 from .coordinator import IkuaiCoordinator
+from .helpers import decode_term_name
 
 @dataclass(frozen=True, kw_only=True)
 class IkuaiEventEntityDescription(EventEntityDescription):
@@ -142,7 +143,7 @@ class IkuaiEvent(EventEntity, CoordinatorEntity[IkuaiCoordinator]):
             if self._is_duplicate(event_id):
                 continue
 
-            device_label = item.get("termname") or item.get("client_model") or item.get("mac")
+            device_label = decode_term_name(item.get("termname")) or decode_term_name(item.get("client_model")) or item.get("mac")
             is_off = int(item.get("logout_time", 0)) > 0
             action = "offline" if is_off else "online"
 
@@ -154,7 +155,7 @@ class IkuaiEvent(EventEntity, CoordinatorEntity[IkuaiCoordinator]):
                 "today_total": item.get("today_total"),
                 "os": item.get("systype"),
                 "vendor": item.get("devtype"),
-                "model": item.get("client_model"),
+                "model": decode_term_name(item.get("client_model")),
                 "id": item.get("id"),
                 "timestamp": item.get("date_time")
             })
@@ -188,7 +189,7 @@ class IkuaiEvent(EventEntity, CoordinatorEntity[IkuaiCoordinator]):
             if self._is_duplicate(event_id):
                 continue
 
-            name = item.get("termname")
+            name = decode_term_name(item.get("termname"))
             if not name or name == "--":
                 name = item.get("mac")
 

@@ -36,7 +36,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-from .helpers import extract_name_from_label, normalize_mac
+from .helpers import decode_term_name, extract_name_from_label, normalize_mac
 
 class IkuaiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """处理 iKuai Connect 的初次配置和重新配置."""
@@ -244,8 +244,8 @@ class IkuaiOptionsFlowHandler(config_entries.OptionsFlow):
             mac = normalize_mac(item.get("mac", ""))
             ip = item.get("ip_addr", "")
             # 优先级逻辑：终端名 > 型号 > 备注
-            termname = item.get("termname", "")
-            model = item.get("client_model", "")
+            termname = decode_term_name(item.get("termname", ""))
+            model = decode_term_name(item.get("client_model", ""))
             comment = extract_name_from_label(item.get("comment", ""))
             name_priority = termname or model or comment
             return (

@@ -1,0 +1,26 @@
+# 二次开发记录 (Dev Notes)
+
+本文件用于记录对 `ha_ikuai_connect` 的二次开发内容。
+
+## 环境信息
+
+- 上游仓库 (upstream)：https://github.com/PraxiGEN/ha_ikuai_connect
+- 本仓库 (origin/fork)：https://github.com/dtapps/ha_ikuai_connect
+
+## 同步上游
+
+```bash
+git fetch upstream
+git merge upstream/main
+# 或 git rebase upstream/main
+```
+
+## 开发记录
+
+| 日期 | 模块 | 改动说明 | 备注 |
+| ---- | ---- | -------- | ---- |
+| 2026-10-07 | helpers/config_flow/coordinator/event/services/switch | 修复 issue #42：终端名称未做 URL 编码解码。新增 `decode_term_name()` 辅助函数（对 `termname`/`client_model` 做 `unquote` 反解码，还原 `%20`→空格），并在设备发现、display_name、在线/离线事件、WiFi 事件、流量统计服务、离线历史服务、MAC 规则属性等所有读取终端名的位置统一应用。 | 上游作者认为 3.0→4.0 升级后被爱快强行填充的编码名不是问题，故自行 fork 修复。 |
+
+---
+
+<!-- 在此追加二次开发条目 -->

@@ -12,6 +12,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER
 from .coordinator import IkuaiCoordinator
+from .helpers import decode_term_name
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -148,7 +149,7 @@ class IkuaiMacRuleSwitch(CoordinatorEntity[IkuaiCoordinator], SwitchEntity):
 
         return {
             "mac_address": rule.get("mac"),
-            "terminal_name": rule.get("termname"),
+            "terminal_name": decode_term_name(rule.get("termname")),
             "comment": rule.get("comment"),
             "schedule": "; ".join(formatted_times) if formatted_times else self._labels["all_day"],
             "expires": expires_label,

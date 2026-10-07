@@ -4,6 +4,18 @@ from __future__ import annotations
 import re
 from urllib.parse import unquote
 
+def decode_term_name(name: str | None) -> str:
+    """对终端名称做 URL 反解码.
+
+    爱快 3.0 升级 4.0 后，部分历史终端名被系统强行填充为 URL 编码字符串
+    （如 ``小米%20Pad%208%20Pro``），直接展示会带着 ``%20`` 等编码字符。
+    这里统一做反解码，把 ``%20`` 还原为空格。
+    """
+    if not name or not isinstance(name, str):
+        return name if name else ""
+    return unquote(name).strip()
+
+
 def extract_name_from_label(label: str) -> str:
     """从 iKuai 的备注或标签中提取名称. 
     """
