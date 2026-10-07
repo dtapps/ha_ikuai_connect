@@ -1,8 +1,14 @@
 """iKuai Connect 集成级服务（单例注册）."""
+
 from __future__ import annotations
 
 import voluptuous as vol
-from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 import homeassistant.util.dt as dt_util
 
@@ -10,12 +16,16 @@ from .const import DOMAIN, LOGGER
 from .coordinator import IkuaiCoordinator
 from .helpers import decode_term_name
 
-def _get_coordinator(hass: HomeAssistant, device_id: str | None = None) -> IkuaiCoordinator:
+
+def _get_coordinator(
+    hass: HomeAssistant, device_id: str | None = None
+) -> IkuaiCoordinator:
     """根据 device_id 获取对应 coordinator，未指定时自动选择唯一 entry."""
     # runtime_data 由框架在卸载后 delattr 删除（无类级默认值），
     # 必须用 getattr 防御式取值，避免命中已卸载 entry 时抛 AttributeError。
     entries = [
-        e for e in hass.config_entries.async_entries(DOMAIN)
+        e
+        for e in hass.config_entries.async_entries(DOMAIN)
         if getattr(e, "runtime_data", None) is not None
     ]
 
@@ -34,9 +44,8 @@ def _get_coordinator(hass: HomeAssistant, device_id: str | None = None) -> Ikuai
     if len(entries) == 1:
         return entries[0].runtime_data
 
-    raise ValueError(
-        "存在多个路由器配置，请通过 device_id 指定目标设备"
-    )
+    raise ValueError("存在多个路由器配置，请通过 device_id 指定目标设备")
+
 
 async def async_setup_services(hass: HomeAssistant) -> None:
     """注册集成级服务（仅注册一次）。"""
@@ -51,7 +60,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             "total_flow_mb": round(res.get("terminal_total_flow", 0) / 1024 / 1024, 2),
             "devices": [
                 {
-                    "name": d.get("comment") or decode_term_name(d.get("termname")) or d.get("mac"),
+                    "name": d.get("comment")
+                    or decode_term_name(d.get("termname"))
+                    or d.get("mac"),
                     "ip": d.get("ip_addr"),
                     "mac": d.get("mac"),
                     "total_mb": round(d.get("sum_total", 0) / 1024 / 1024, 2),
@@ -59,7 +70,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                     "down_mb": round(d.get("sum_total_down", 0) / 1024 / 1024, 2),
                 }
                 for d in res.get("terminal", [])
-            ]
+            ],
         }
 
     # ---获取特定设备的协议分布---
@@ -81,7 +92,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         protocol_data = [
             {
                 "name": p.get("proto_name"),
-                "total_mb": round(p.get("total", 0) / 1024 / 1024, 2)
+                "total_mb": round(p.get("total", 0) / 1024 / 1024, 2),
             }
             for p in res.get("data", [])
             if p.get("total", 0) > 0
@@ -90,7 +101,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         return {
             "mac": mac,
             "ip": ip,
-            "protocols": sorted(protocol_data, key=lambda x: x["total_mb"], reverse=True)
+            "protocols": sorted(
+                protocol_data, key=lambda x: x["total_mb"], reverse=True
+            ),
         }
 
     # ---查询离线历史---
@@ -113,19 +126,25 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             total_mb = round(total_bytes / 1048576, 2)
 
             logout_ts = d.get("logout_time", 0)
-            offline_time = dt_util.as_local(
-                dt_util.utc_from_timestamp(logout_ts)
-            ).strftime("%Y-%m-%d %H:%M:%S") if logout_ts else "Unknown"
+            offline_time = (
+                dt_util.as_local(dt_util.utc_from_timestamp(logout_ts)).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
+                if logout_ts
+                else "Unknown"
+            )
 
-            history_list.append({
-                "name": name,
-                "mac": d.get("mac"),
-                "ip": d.get("ip_addr"),
-                "offline_at": offline_time,
-                "total_usage_mb": total_mb,
-                "client_type": d.get("client_type"),
-                "vendor": d.get("client_vendor")
-            })
+            history_list.append(
+                {
+                    "name": name,
+                    "mac": d.get("mac"),
+                    "ip": d.get("ip_addr"),
+                    "offline_at": offline_time,
+                    "total_usage_mb": total_mb,
+                    "client_type": d.get("client_type"),
+                    "vendor": d.get("client_vendor"),
+                }
+            )
 
         return {"history": history_list}
 
@@ -139,7 +158,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             "tagname": call.data.get("tagname", f"HA_{mac[-5:]}"),
             "comment": call.data.get("comment", "Added by HA"),
             "expires": call.data.get("expires", 0),
-            "strategy": "day", "cycle_time": "all", "time": "00:00-23:59"
+            "strategy": "day",
+            "cycle_time": "all",
+            "time": "00:00-23:59",
         }
 
         await coordinator.api.add_mac_rule(payload)
@@ -176,50 +197,76 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     # ---注册服务---
     hass.services.async_register(
-        DOMAIN, "get_traffic_ranking", async_get_traffic_ranking,
+        DOMAIN,
+        "get_traffic_ranking",
+        async_get_traffic_ranking,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
-        DOMAIN, "get_protocol_stats", async_get_protocol_stats,
+        DOMAIN,
+        "get_protocol_stats",
+        async_get_protocol_stats,
         supports_response=SupportsResponse.ONLY,
-        schema=vol.Schema({
-            vol.Optional("device_id"): cv.string,
-            vol.Required("mac"): cv.string,
-            vol.Optional("ip"): cv.string,
-        }),
+        schema=vol.Schema(
+            {
+                vol.Optional("device_id"): cv.string,
+                vol.Required("mac"): cv.string,
+                vol.Optional("ip"): cv.string,
+            }
+        ),
     )
     hass.services.async_register(
-        DOMAIN, "get_offline_history", async_get_offline_history,
+        DOMAIN,
+        "get_offline_history",
+        async_get_offline_history,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
-        DOMAIN, "add_mac_rule", async_add_mac_rule,
-        schema=vol.Schema({
-            vol.Optional("device_id"): cv.string,
-            vol.Required("mac"): cv.string,
-            vol.Optional("tagname"): cv.string,
-            vol.Optional("comment"): cv.string,
-            vol.Optional("expires"): cv.positive_int,
-        }),
+        DOMAIN,
+        "add_mac_rule",
+        async_add_mac_rule,
+        schema=vol.Schema(
+            {
+                vol.Optional("device_id"): cv.string,
+                vol.Required("mac"): cv.string,
+                vol.Optional("tagname"): cv.string,
+                vol.Optional("comment"): cv.string,
+                vol.Optional("expires"): cv.positive_int,
+            }
+        ),
     )
     hass.services.async_register(
-        DOMAIN, "delete_mac_rule", async_delete_mac_rule,
-        schema=vol.Schema({
-            vol.Optional("device_id"): cv.string,
-            vol.Required("rule_id"): cv.positive_int,
-        }),
+        DOMAIN,
+        "delete_mac_rule",
+        async_delete_mac_rule,
+        schema=vol.Schema(
+            {
+                vol.Optional("device_id"): cv.string,
+                vol.Required("rule_id"): cv.positive_int,
+            }
+        ),
     )
     hass.services.async_register(
-        DOMAIN, "call_api_service", async_call_api,
+        DOMAIN,
+        "call_api_service",
+        async_call_api,
         supports_response=SupportsResponse.ONLY,
-        schema=vol.Schema({
-            vol.Optional("device_id"): cv.string,
-            vol.Required("path"): cv.string,
-            vol.Optional("method", default="GET"): vol.In(["GET", "POST", "PUT", "DELETE"]),
-            vol.Optional("params", default=None): vol.Any(None, cv.string, dict, list),
-            vol.Optional("timeout", default=15): vol.All(vol.Coerce(float), vol.Range(min=1, max=120)),
-            vol.Optional("return_raw", default=False): cv.boolean,
-        }),
+        schema=vol.Schema(
+            {
+                vol.Optional("device_id"): cv.string,
+                vol.Required("path"): cv.string,
+                vol.Optional("method", default="GET"): vol.In(
+                    ["GET", "POST", "PUT", "DELETE"]
+                ),
+                vol.Optional("params", default=None): vol.Any(
+                    None, cv.string, dict, list
+                ),
+                vol.Optional("timeout", default=15): vol.All(
+                    vol.Coerce(float), vol.Range(min=1, max=120)
+                ),
+                vol.Optional("return_raw", default=False): cv.boolean,
+            }
+        ),
     )
 
 

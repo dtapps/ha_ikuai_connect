@@ -1,4 +1,5 @@
 """iKuai Connect 设备追踪平台."""
+
 from __future__ import annotations
 
 from homeassistant.components.device_tracker import BaseScannerEntity, SourceType
@@ -11,6 +12,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, LOGGER, CONF_TRACKER_CONFIG
 from .coordinator import IkuaiCoordinator
 from .helpers import normalize_mac
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -25,7 +27,9 @@ async def async_setup_entry(
     @callback
     def _async_manage_entities() -> None:
         """动态管理追踪实体：增量添加与物理删除."""
-        tracker_config = entry.options.get(CONF_TRACKER_CONFIG) or entry.data.get(CONF_TRACKER_CONFIG, {})
+        tracker_config = entry.options.get(CONF_TRACKER_CONFIG) or entry.data.get(
+            CONF_TRACKER_CONFIG, {}
+        )
         ent_reg = er.async_get(hass)
         new_entities = []
         current_configured_uids = set()
@@ -37,7 +41,9 @@ async def async_setup_entry(
             current_configured_uids.add(uid)
 
             if uid not in added_unique_ids:
-                new_entities.append(IkuaiTracker(coordinator, normalize_mac(mac), conf, uid))
+                new_entities.append(
+                    IkuaiTracker(coordinator, normalize_mac(mac), conf, uid)
+                )
                 added_unique_ids.add(uid)
 
         if new_entities:
@@ -58,13 +64,16 @@ async def async_setup_entry(
     # 绑定监听：每当协调器数据更新时，触发动态管理
     entry.async_on_unload(coordinator.async_add_listener(_async_manage_entities))
 
+
 class IkuaiTracker(CoordinatorEntity[IkuaiCoordinator], BaseScannerEntity):
     """iKuai 终端追踪实体（连接型：state 由 is_connected 推导 home/not_home）."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "ikuai_tracker" 
+    _attr_translation_key = "ikuai_tracker"
 
-    def __init__(self, coordinator: IkuaiCoordinator, mac: str, config: dict, uid: str) -> None:
+    def __init__(
+        self, coordinator: IkuaiCoordinator, mac: str, config: dict, uid: str
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self._mac = normalize_mac(mac)
@@ -89,7 +98,7 @@ class IkuaiTracker(CoordinatorEntity[IkuaiCoordinator], BaseScannerEntity):
         """返回精简后的物理属性."""
         if not self.coordinator.data:
             return {}
-        
+
         client = self.coordinator.data.get("clients", {}).get(self._mac, {})
         if not client:
             return {"mac_address": self._mac}

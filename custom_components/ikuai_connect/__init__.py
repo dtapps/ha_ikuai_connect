@@ -1,4 +1,5 @@
 """ikuai connect 集成入口."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,6 +13,7 @@ from .services import async_setup_services, async_unload_services
 
 type IkuaiConfigEntry = ConfigEntry[IkuaiCoordinator]
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: IkuaiConfigEntry) -> bool:
     """设置集成入口."""
     # 实例 API
@@ -21,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IkuaiConfigEntry) -> boo
         hass,
         api,
         entry.data[CONF_HOST],
-        entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
     )
     coordinator.config_entry = entry
 
@@ -40,9 +42,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: IkuaiConfigEntry) -> boo
 
     return True
 
+
 async def update_listener(hass: HomeAssistant, entry: IkuaiConfigEntry) -> None:
     """当 Options 或 Data 变更时重载."""
     await hass.config_entries.async_reload(entry.entry_id)
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: IkuaiConfigEntry) -> bool:
     """卸载集成."""
