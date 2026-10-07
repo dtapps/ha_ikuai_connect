@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'custom_components/**/manifest.json'
+      - "custom_components/**/manifest.json"
   workflow_dispatch:
 
 permissions:
@@ -71,19 +71,19 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ steps.check.outputs.version }}
-      
+
           name: v${{ steps.check.outputs.version }} - ${{ steps.check.outputs.commit_title }}
-      
+
           files: |
             ${{ steps.check.outputs.comp_name }}.zip
-      
+
           draft: true
-      
+
           prerelease: ${{ steps.check.outputs.is_prerelease }}
-      
+
           generate_release_notes: true
-      
+
           target_commitish: ${{ github.sha }}
-      
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

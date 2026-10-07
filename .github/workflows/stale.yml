@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Mark and close stale issues
-        uses: actions/stale@v9
+        uses: actions/stale@v11
         with:
           # === Timing / 时间设置 ===
           # Days of inactivity before an issue is marked stale
@@ -49,25 +49,25 @@ jobs:
           # === Messages (bilingual) / 消息（双语）===
           stale-issue-message: |
             ## ⏳ Stale Notice · 过期提醒
-          
+
             > This issue has been inactive for **15 days**.
             > 该问题已 **15 天无活动**。
-          
+
             💬 If it's still relevant, leave a comment to keep it open.
             💬 如果问题仍然存在，请留言以保持开启。
-          
+
             🕐 It will be **automatically closed in 5 days** if no further activity occurs.
             🕐 若无进一步活动，将在 **5 天后自动关闭**。
-          
+
           close-issue-message: |
             ## 🔒 Issue Closed · 问题已关闭
-          
+
             > It was marked as `stale` for **5 days** with no further activity.
             > 该问题在标记为 `stale` **5 天**后仍无活动。
-          
+
             🔄 If this was closed in error, please **reopen it with a comment**.
             🔄 如果这是误关，请**留言并重新打开**。
-          
+
             ✨ No need to file a duplicate issue — reopening keeps all the history.
             ✨ 无需重复提交问题，重新打开即可保留全部历史记录。
 

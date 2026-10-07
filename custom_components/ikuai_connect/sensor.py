@@ -1,4 +1,5 @@
 """iKuai Connect 传感器平台."""
+
 from __future__ import annotations
 
 import re
@@ -28,11 +29,14 @@ from homeassistant.helpers.entity import EntityCategory
 from .const import DOMAIN
 from .coordinator import IkuaiCoordinator
 
+
 @dataclass(frozen=True, kw_only=True)
 class IkuaiSensorEntityDescription(SensorEntityDescription):
     """自定义描述符：增加数据提取和属性提取函数."""
+
     value_fn: Callable[[dict[str, Any]], Any] | None = None
     attr_fn: Callable[[dict[str, Any]], dict[str, Any]] | None = None
+
 
 def _short_version(raw: Any) -> Any:
     """从版本串中提取短版本号。
@@ -44,6 +48,7 @@ def _short_version(raw: Any) -> Any:
         return None
     m = re.search(r"\d+(?:\.\d+){1,3}", str(raw))
     return m.group(0) if m else str(raw)
+
 
 # 主设备 (Router Core) 传感器定义
 SYSTEM_SENSORS: Final[tuple[IkuaiSensorEntityDescription, ...]] = (
@@ -100,7 +105,11 @@ SYSTEM_SENSORS: Final[tuple[IkuaiSensorEntityDescription, ...]] = (
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.get("system", {}).get("upload"),
-        attr_fn=lambda d: {"ipv6_upload_speed": d.get("system", {}).get("v6_stats", {}).get("upload_speed_v6")},
+        attr_fn=lambda d: {
+            "ipv6_upload_speed": d.get("system", {})
+            .get("v6_stats", {})
+            .get("upload_speed_v6")
+        },
     ),
     IkuaiSensorEntityDescription(
         key="sys_download",
@@ -113,7 +122,11 @@ SYSTEM_SENSORS: Final[tuple[IkuaiSensorEntityDescription, ...]] = (
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.get("system", {}).get("download"),
-        attr_fn=lambda d: {"ipv6_download_speed": d.get("system", {}).get("v6_stats", {}).get("download_speed_v6")},
+        attr_fn=lambda d: {
+            "ipv6_download_speed": d.get("system", {})
+            .get("v6_stats", {})
+            .get("download_speed_v6")
+        },
     ),
     IkuaiSensorEntityDescription(
         key="sys_total_up",
@@ -126,7 +139,11 @@ SYSTEM_SENSORS: Final[tuple[IkuaiSensorEntityDescription, ...]] = (
         suggested_display_precision=2,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda d: d.get("system", {}).get("total_up"),
-        attr_fn=lambda d: {"ipv6_total_upload": d.get("system", {}).get("v6_stats", {}).get("total_upload_v6")},
+        attr_fn=lambda d: {
+            "ipv6_total_upload": d.get("system", {})
+            .get("v6_stats", {})
+            .get("total_upload_v6")
+        },
     ),
     IkuaiSensorEntityDescription(
         key="sys_total_down",
@@ -139,7 +156,11 @@ SYSTEM_SENSORS: Final[tuple[IkuaiSensorEntityDescription, ...]] = (
         suggested_display_precision=2,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda d: d.get("system", {}).get("total_down"),
-        attr_fn=lambda d: {"ipv6_total_download": d.get("system", {}).get("v6_stats", {}).get("total_download_v6")},
+        attr_fn=lambda d: {
+            "ipv6_total_download": d.get("system", {})
+            .get("v6_stats", {})
+            .get("total_download_v6")
+        },
     ),
     IkuaiSensorEntityDescription(
         key="uptime",
@@ -168,7 +189,7 @@ SYSTEM_SENSORS: Final[tuple[IkuaiSensorEntityDescription, ...]] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.get("system", {}).get("ap_online"),
         attr_fn=lambda d: d.get("system", {}).get("wireless_detail", {}),
-    )
+    ),
 )
 
 # 网口级传感器 (Interface) 模板
@@ -251,44 +272,65 @@ WAN_STATUS_SENSORS: Final[tuple[IkuaiSensorEntityDescription, ...]] = (
 # WAN 口 IPv6 流量传感器（分口），挂接口监控子设备
 WAN_V6_SENSORS: Final[tuple[IkuaiSensorEntityDescription, ...]] = (
     IkuaiSensorEntityDescription(
-        key="v6_upload_speed", name="IPv6 Upload Speed", translation_key="wan_v6_upload_speed",
-        icon="mdi:upload-network", device_class=SensorDeviceClass.DATA_RATE,
+        key="v6_upload_speed",
+        name="IPv6 Upload Speed",
+        translation_key="wan_v6_upload_speed",
+        icon="mdi:upload-network",
+        device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
-        suggested_display_precision=2, state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     IkuaiSensorEntityDescription(
-        key="v6_download_speed", name="IPv6 Download Speed", translation_key="wan_v6_download_speed",
-        icon="mdi:download-network", device_class=SensorDeviceClass.DATA_RATE,
+        key="v6_download_speed",
+        name="IPv6 Download Speed",
+        translation_key="wan_v6_download_speed",
+        icon="mdi:download-network",
+        device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
-        suggested_display_precision=2, state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     IkuaiSensorEntityDescription(
-        key="v6_total_up", name="IPv6 Total Upload", translation_key="wan_v6_total_up",
-        icon="mdi:upload", device_class=SensorDeviceClass.DATA_SIZE,
+        key="v6_total_up",
+        name="IPv6 Total Upload",
+        translation_key="wan_v6_total_up",
+        icon="mdi:upload",
+        device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
-        suggested_display_precision=2, state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     IkuaiSensorEntityDescription(
-        key="v6_total_down", name="IPv6 Total Download", translation_key="wan_v6_total_down",
-        icon="mdi:download", device_class=SensorDeviceClass.DATA_SIZE,
+        key="v6_total_down",
+        name="IPv6 Total Download",
+        translation_key="wan_v6_total_down",
+        icon="mdi:download",
+        device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
-        suggested_display_precision=2, state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     IkuaiSensorEntityDescription(
-        key="v6_conn", name="IPv6 Connection Count", translation_key="wan_v6_conn",
-        icon="mdi:ip-network", state_class=SensorStateClass.MEASUREMENT,
+        key="v6_conn",
+        name="IPv6 Connection Count",
+        translation_key="wan_v6_conn",
+        icon="mdi:ip-network",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
 # 多 WAN 负载均衡快照（只读诊断），挂接口监控子设备
 WAN_BALANCE_SENSORS: Final[tuple[IkuaiSensorEntityDescription, ...]] = (
     IkuaiSensorEntityDescription(
-        key="balance_snapshot", name="WAN Load Balance Snapshot",
-        translation_key="wan_balance_snapshot", icon="mdi:scale-balance",
+        key="balance_snapshot",
+        name="WAN Load Balance Snapshot",
+        translation_key="wan_balance_snapshot",
+        icon="mdi:scale-balance",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda d: d.get("wan_balance", {}).get("_state"),
         attr_fn=lambda d: d.get("wan_balance", {}).get("lines", {}),
@@ -305,11 +347,17 @@ MAINTENANCE_SENSORS: Final[tuple[IkuaiSensorEntityDescription, ...]] = (
         # 状态取「当前版本」短号（如 4.0.111），来源为 /api/v4.0/monitoring/system 的
         # sysinfo.verinfo.version；该字段本就是干净短版本号，缺失时回退用 _short_version
         # 从 verinfo.verstring 中提取（如 '4.0.111-beta x64 ...' -> '4.0.111'）。
-        value_fn=lambda d: (d.get("system", {}).get("verinfo", {}) or {}).get("version") \
-            or _short_version((d.get("system", {}).get("verinfo", {}) or {}).get("verstring")),
+        value_fn=lambda d: (
+            (d.get("system", {}).get("verinfo", {}) or {}).get("version")
+            or _short_version(
+                (d.get("system", {}).get("verinfo", {}) or {}).get("verstring")
+            )
+        ),
         # 属性：版本全部信息（来自 verinfo，扁平化为顶层属性，便于翻译显示中文名）
         attr_fn=lambda d: {
-            "version": (vi := d.get("system", {}).get("verinfo", {}) or {}).get("version"),
+            "version": (vi := d.get("system", {}).get("verinfo", {}) or {}).get(
+                "version"
+            ),
             "verstring": vi.get("verstring"),
             "modelname": vi.get("modelname"),
             "build_date": vi.get("build_date"),
@@ -367,6 +415,7 @@ DISK_SENSORS: Final[tuple[IkuaiSensorEntityDescription, ...]] = (
     ),
 )
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -387,7 +436,11 @@ async def async_setup_entry(
     # + 首个 LAN（名称以 lan 开头）。仅这些接口的流量传感器默认启用，其余默认禁用。
     wan_ifaces = [k for k, v in interfaces.items() if v.get("is_wan_line")]
     wan_parents = sorted(n for n in wan_ifaces if n.startswith("wan"))
-    first_wan = wan_parents[0] if wan_parents else (sorted(wan_ifaces)[0] if wan_ifaces else None)
+    first_wan = (
+        wan_parents[0]
+        if wan_parents
+        else (sorted(wan_ifaces)[0] if wan_ifaces else None)
+    )
     lan_names = sorted(n for n in interfaces if n.startswith("lan"))
     first_lan = lan_names[0] if lan_names else None
     important_ifaces = {x for x in (first_wan, first_lan) if x}
@@ -398,9 +451,7 @@ async def async_setup_entry(
     )
     v6_wan_any = sorted(n for n in wan_ifaces if interfaces[n].get("has_v6"))
     first_v6_wan = (
-        v6_wan_parents[0]
-        if v6_wan_parents
-        else (v6_wan_any[0] if v6_wan_any else None)
+        v6_wan_parents[0] if v6_wan_parents else (v6_wan_any[0] if v6_wan_any else None)
     )
 
     # 接口流量传感器：仅「重要接口」默认启用，其余默认禁用
@@ -440,8 +491,10 @@ async def async_setup_entry(
 
     async_add_entities(entities, True)
 
+
 class IkuaiSystemSensor(CoordinatorEntity[IkuaiCoordinator], SensorEntity):
     """主设备负载传感器."""
+
     entity_description: IkuaiSensorEntityDescription
     _attr_has_entity_name = True
 
@@ -453,7 +506,8 @@ class IkuaiSystemSensor(CoordinatorEntity[IkuaiCoordinator], SensorEntity):
 
     @property
     def native_value(self):
-        if not self.coordinator.data: return None
+        if not self.coordinator.data:
+            return None
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
@@ -462,8 +516,10 @@ class IkuaiSystemSensor(CoordinatorEntity[IkuaiCoordinator], SensorEntity):
             return {}
         return self.entity_description.attr_fn(self.coordinator.data)
 
+
 class IkuaiIfaceSensor(CoordinatorEntity[IkuaiCoordinator], SensorEntity):
     """网络接口监控传感器 (子设备)."""
+
     entity_description: IkuaiSensorEntityDescription
     _attr_has_entity_name = True
 
@@ -472,13 +528,18 @@ class IkuaiIfaceSensor(CoordinatorEntity[IkuaiCoordinator], SensorEntity):
         self.entity_description = description
         self._iface_name = iface_name
         self._attr_translation_placeholders = {"iface": iface_name}
-        self._attr_unique_id = f"{coordinator.gwid}_iface_{iface_name}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.gwid}_iface_{iface_name}_{description.key}"
+        )
         self._attr_device_info = coordinator.iface_mgmt_device_info
 
     @property
     def native_value(self):
-        if not self.coordinator.data: return None
-        iface_data = self.coordinator.data.get("interfaces", {}).get(self._iface_name, {})
+        if not self.coordinator.data:
+            return None
+        iface_data = self.coordinator.data.get("interfaces", {}).get(
+            self._iface_name, {}
+        )
         if self.entity_description.value_fn is not None:
             return self.entity_description.value_fn(iface_data)
         return iface_data.get(self.entity_description.key)
@@ -487,11 +548,15 @@ class IkuaiIfaceSensor(CoordinatorEntity[IkuaiCoordinator], SensorEntity):
     def extra_state_attributes(self):
         if not self.coordinator.data or not self.entity_description.attr_fn:
             return {}
-        iface_data = self.coordinator.data.get("interfaces", {}).get(self._iface_name, {})
+        iface_data = self.coordinator.data.get("interfaces", {}).get(
+            self._iface_name, {}
+        )
         return self.entity_description.attr_fn(iface_data)
+
 
 class IkuaiWanBalanceSensor(CoordinatorEntity[IkuaiCoordinator], SensorEntity):
     """多 WAN 负载均衡快照（接口监控子设备，诊断类）."""
+
     entity_description: IkuaiSensorEntityDescription
     _attr_has_entity_name = True
 
@@ -503,7 +568,8 @@ class IkuaiWanBalanceSensor(CoordinatorEntity[IkuaiCoordinator], SensorEntity):
 
     @property
     def native_value(self):
-        if not self.coordinator.data: return None
+        if not self.coordinator.data:
+            return None
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
@@ -512,8 +578,10 @@ class IkuaiWanBalanceSensor(CoordinatorEntity[IkuaiCoordinator], SensorEntity):
             return {}
         return self.entity_description.attr_fn(self.coordinator.data)
 
+
 class IkuaiMaintenanceSensor(CoordinatorEntity[IkuaiCoordinator], SensorEntity):
     """升级与备份管理 (子设备)."""
+
     entity_description: IkuaiSensorEntityDescription
     _attr_has_entity_name = True
 
@@ -525,7 +593,8 @@ class IkuaiMaintenanceSensor(CoordinatorEntity[IkuaiCoordinator], SensorEntity):
 
     @property
     def native_value(self):
-        if not self.coordinator.data: return None
+        if not self.coordinator.data:
+            return None
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
@@ -534,19 +603,26 @@ class IkuaiMaintenanceSensor(CoordinatorEntity[IkuaiCoordinator], SensorEntity):
             return {}
         return self.entity_description.attr_fn(self.coordinator.data)
 
+
 class IkuaiDiskSensor(CoordinatorEntity[IkuaiCoordinator], SensorEntity):
     """磁盘管理传感器."""
+
     entity_description: IkuaiSensorEntityDescription
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: IkuaiCoordinator, description: IkuaiSensorEntityDescription, disk_id: str) -> None:
+    def __init__(
+        self,
+        coordinator: IkuaiCoordinator,
+        description: IkuaiSensorEntityDescription,
+        disk_id: str,
+    ) -> None:
         super().__init__(coordinator)
         self.entity_description = description
         self._disk_id = disk_id
-        
+
         disk_data = coordinator.data["disks"].get(disk_id, {})
         model = disk_data.get("base_info", {}).get("model", disk_id)
-        
+
         self._attr_unique_id = f"{coordinator.gwid}_disk_{disk_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.host}_disk_{disk_id}")},
@@ -558,13 +634,17 @@ class IkuaiDiskSensor(CoordinatorEntity[IkuaiCoordinator], SensorEntity):
 
     @property
     def native_value(self):
-        if not self.coordinator.data: return None
-        disk_data = self.coordinator.data["disks"].get(self._disk_id, {}).get("state", {})
+        if not self.coordinator.data:
+            return None
+        disk_data = (
+            self.coordinator.data["disks"].get(self._disk_id, {}).get("state", {})
+        )
         return disk_data.get(self.entity_description.key)
 
     @property
     def extra_state_attributes(self):
-        if not self.coordinator.data: return {}
+        if not self.coordinator.data:
+            return {}
         disk_data = self.coordinator.data["disks"].get(self._disk_id, {})
         if self.entity_description.key == "disk_physical_size":
             return disk_data.get("base_info", {})
