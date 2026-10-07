@@ -1,4 +1,5 @@
 """iKuai Connect 配置流实现."""
+
 from __future__ import annotations
 
 import re
@@ -38,6 +39,7 @@ from .const import (
 )
 from .helpers import decode_term_name, extract_name_from_label, normalize_mac
 
+
 class IkuaiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """处理 iKuai Connect 的初次配置和重新配置."""
 
@@ -55,7 +57,9 @@ class IkuaiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # 只有在初次安装时显示集成标题
         if not is_reconfigure:
             schema[
-                vol.Required(CONF_NAME, default=defaults.get(CONF_NAME, "iKuai Connect"))
+                vol.Required(
+                    CONF_NAME, default=defaults.get(CONF_NAME, "iKuai Connect")
+                )
             ] = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 
         schema.update(
@@ -63,9 +67,9 @@ class IkuaiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_HOST, default=defaults.get(CONF_HOST, "https://10.10.10.1")
                 ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
-                vol.Required(CONF_TOKEN, default=defaults.get(CONF_TOKEN)): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
-                ),
+                vol.Required(
+                    CONF_TOKEN, default=defaults.get(CONF_TOKEN)
+                ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
             }
         )
         return vol.Schema(schema)
@@ -158,6 +162,7 @@ class IkuaiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> IkuaiOptionsFlowHandler:
         """获取选项流处理器."""
         return IkuaiOptionsFlowHandler()
+
 
 class IkuaiOptionsFlowHandler(config_entries.OptionsFlow):
     """处理集成选项、终端追踪及高级参数."""
@@ -292,15 +297,17 @@ class IkuaiOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="scan",
-            data_schema=vol.Schema({
-                vol.Optional("devices"): SelectSelector(
-                    SelectSelectorConfig(
-                        options=device_options,
-                        multiple=True, # 允许多选
-                        mode=SelectSelectorMode.LIST,
+            data_schema=vol.Schema(
+                {
+                    vol.Optional("devices"): SelectSelector(
+                        SelectSelectorConfig(
+                            options=device_options,
+                            multiple=True,  # 允许多选
+                            mode=SelectSelectorMode.LIST,
+                        )
                     )
-                )
-            }),
+                }
+            ),
             errors=errors,
         )
 
@@ -338,11 +345,12 @@ class IkuaiOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_NAME, default=default_name): str,
-                    vol.Required(
-                        CONF_OFFLINE_GRACE_PERIOD, default=10
-                    ): NumberSelector(
+                    vol.Required(CONF_OFFLINE_GRACE_PERIOD, default=10): NumberSelector(
                         NumberSelectorConfig(
-                            min=1, max=60, unit_of_measurement="min", mode=NumberSelectorMode.BOX
+                            min=1,
+                            max=60,
+                            unit_of_measurement="min",
+                            mode=NumberSelectorMode.BOX,
                         )
                     ),
                 }
@@ -372,13 +380,15 @@ class IkuaiOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="remove",
-            data_schema=vol.Schema({
-                vol.Optional("devices_to_remove"): SelectSelector(
-                    SelectSelectorConfig(
-                        options=current_options,
-                        multiple=True,
-                        mode=SelectSelectorMode.LIST,
+            data_schema=vol.Schema(
+                {
+                    vol.Optional("devices_to_remove"): SelectSelector(
+                        SelectSelectorConfig(
+                            options=current_options,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
                     )
-                )
-            }),
+                }
+            ),
         )

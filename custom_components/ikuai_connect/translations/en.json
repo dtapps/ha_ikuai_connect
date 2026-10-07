@@ -276,7 +276,10 @@
           "signal": { "name": "Signal Strength" },
           "ap_mac": { "name": "AP MAC Address" },
           "ap_name": { "name": "Access Point" },
-          "action": { "name": "Event", "state": { "login": "Login", "logout": "Logout" }},
+          "action": {
+            "name": "Event",
+            "state": { "login": "Login", "logout": "Logout" }
+          },
           "reason": { "name": "Reason" },
           "time": { "name": "Timestamp" }
         }
@@ -294,7 +297,7 @@
       }
     },
     "select": {
-      "mac_acl_mode": { 
+      "mac_acl_mode": {
         "name": "Global Access Control Mode",
         "state": {
           "whitelist": "Whitelist Mode (Allow)",

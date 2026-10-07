@@ -1,4 +1,5 @@
 """iKuai Connect 事件传感器平台."""
+
 from __future__ import annotations
 
 import time
@@ -17,9 +18,11 @@ from .const import DOMAIN, LOGGER
 from .coordinator import IkuaiCoordinator
 from .helpers import decode_term_name
 
+
 @dataclass(frozen=True, kw_only=True)
 class IkuaiEventEntityDescription(EventEntityDescription):
     """描述 iKuai 事件实体."""
+
 
 EVENT_TYPES: Final[tuple[IkuaiEventEntityDescription, ...]] = (
     IkuaiEventEntityDescription(
@@ -54,6 +57,7 @@ EVENT_TYPES: Final[tuple[IkuaiEventEntityDescription, ...]] = (
     ),
 )
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -63,6 +67,7 @@ async def async_setup_entry(
     coordinator: IkuaiCoordinator = entry.runtime_data
     async_add_entities(IkuaiEvent(coordinator, desc) for desc in EVENT_TYPES)
 
+
 class IkuaiEvent(EventEntity, CoordinatorEntity[IkuaiCoordinator]):
     """iKuai 固定事件模型实现."""
 
@@ -70,7 +75,9 @@ class IkuaiEvent(EventEntity, CoordinatorEntity[IkuaiCoordinator]):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, coordinator: IkuaiCoordinator, description: IkuaiEventEntityDescription) -> None:
+    def __init__(
+        self, coordinator: IkuaiCoordinator, description: IkuaiEventEntityDescription
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self.entity_description = description
@@ -128,11 +135,14 @@ class IkuaiEvent(EventEntity, CoordinatorEntity[IkuaiCoordinator]):
                 continue
 
             title = item.get("title", "notification")
-            self._fire_smart_event(title, {
-                "detail": item.get("detail"),
-                "status": "read" if item.get("status") == 1 else "unread",
-                "id": item.get("id")
-            })
+            self._fire_smart_event(
+                title,
+                {
+                    "detail": item.get("detail"),
+                    "status": "read" if item.get("status") == 1 else "unread",
+                    "id": item.get("id"),
+                },
+            )
             has_fired = True
         return has_fired
 
@@ -143,22 +153,29 @@ class IkuaiEvent(EventEntity, CoordinatorEntity[IkuaiCoordinator]):
             if self._is_duplicate(event_id):
                 continue
 
-            device_label = decode_term_name(item.get("termname")) or decode_term_name(item.get("client_model")) or item.get("mac")
+            device_label = (
+                decode_term_name(item.get("termname"))
+                or decode_term_name(item.get("client_model"))
+                or item.get("mac")
+            )
             is_off = int(item.get("logout_time", 0)) > 0
             action = "offline" if is_off else "online"
 
-            self._fire_smart_event(device_label, {
-                "mac": item.get("mac"),
-                "ip": item.get("ip_addr"),
-                "action": action,
-                "online_time": item.get("online_time"),
-                "today_total": item.get("today_total"),
-                "os": item.get("systype"),
-                "vendor": item.get("devtype"),
-                "model": decode_term_name(item.get("client_model")),
-                "id": item.get("id"),
-                "timestamp": item.get("date_time")
-            })
+            self._fire_smart_event(
+                device_label,
+                {
+                    "mac": item.get("mac"),
+                    "ip": item.get("ip_addr"),
+                    "action": action,
+                    "online_time": item.get("online_time"),
+                    "today_total": item.get("today_total"),
+                    "os": item.get("systype"),
+                    "vendor": item.get("devtype"),
+                    "model": decode_term_name(item.get("client_model")),
+                    "id": item.get("id"),
+                    "timestamp": item.get("date_time"),
+                },
+            )
             has_fired = True
         return has_fired
 
@@ -170,15 +187,20 @@ class IkuaiEvent(EventEntity, CoordinatorEntity[IkuaiCoordinator]):
                 continue
 
             display_name = item.get("domain", "ddns")
-            self._fire_smart_event(display_name, {
-                "domain": item.get("domain"),
-                "status": item.get("result"),
-                "message": item.get("event"),
-                "ip": item.get("ip_addr"),
-                "mac": item.get("interface"),
-                "id": item.get("id"),
-                "time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(item.get("timestamp", 0)))
-            })
+            self._fire_smart_event(
+                display_name,
+                {
+                    "domain": item.get("domain"),
+                    "status": item.get("result"),
+                    "message": item.get("event"),
+                    "ip": item.get("ip_addr"),
+                    "mac": item.get("interface"),
+                    "id": item.get("id"),
+                    "time": time.strftime(
+                        "%Y-%m-%d %H:%M:%S", time.localtime(item.get("timestamp", 0))
+                    ),
+                },
+            )
             has_fired = True
         return has_fired
 
@@ -193,16 +215,19 @@ class IkuaiEvent(EventEntity, CoordinatorEntity[IkuaiCoordinator]):
             if not name or name == "--":
                 name = item.get("mac")
 
-            self._fire_smart_event(name, {
-                "mac": item.get("mac"),
-                "ssid": item.get("ssid"),
-                "signal": f"{item.get('signal')} dBm",
-                "ap_mac": item.get("apmac"),
-                "ap_name": item.get("apmac_comment"),
-                "action": item.get("action"),
-                "reason": item.get("errmsg"),
-                "id": item.get("id")
-            })
+            self._fire_smart_event(
+                name,
+                {
+                    "mac": item.get("mac"),
+                    "ssid": item.get("ssid"),
+                    "signal": f"{item.get('signal')} dBm",
+                    "ap_mac": item.get("apmac"),
+                    "ap_name": item.get("apmac_comment"),
+                    "action": item.get("action"),
+                    "reason": item.get("errmsg"),
+                    "id": item.get("id"),
+                },
+            )
             has_fired = True
         return has_fired
 
@@ -214,14 +239,17 @@ class IkuaiEvent(EventEntity, CoordinatorEntity[IkuaiCoordinator]):
                 continue
 
             content = item.get("content") or "system_log"
-            self._fire_smart_event(content, {
-                "content": content,
-                "level": item.get("level"),
-                "module": item.get("module"),
-                "process": item.get("process"),
-                "id": item.get("id"),
-                "timestamp": item.get("timestamp"),
-            })
+            self._fire_smart_event(
+                content,
+                {
+                    "content": content,
+                    "level": item.get("level"),
+                    "module": item.get("module"),
+                    "process": item.get("process"),
+                    "id": item.get("id"),
+                    "timestamp": item.get("timestamp"),
+                },
+            )
             has_fired = True
         return has_fired
 

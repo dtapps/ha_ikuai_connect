@@ -1,4 +1,5 @@
 """iKuai Connect 选择器平台."""
+
 from __future__ import annotations
 
 from typing import Final
@@ -19,22 +20,20 @@ SELECT_TYPES: Final[tuple[SelectEntityDescription, ...]] = (
         name="Global Access Control Mode",
         translation_key="mac_acl_mode",
         icon="mdi:shield-check",
-        options=list(MAC_ACL_MODES.values()), # ["blacklist", "whitelist"]
-        entity_category=EntityCategory.CONFIG, # 归类为配置项
+        options=list(MAC_ACL_MODES.values()),  # ["blacklist", "whitelist"]
+        entity_category=EntityCategory.CONFIG,  # 归类为配置项
     ),
 )
 
+
 async def async_setup_entry(
-    hass: HomeAssistant, 
-    entry: ConfigEntry, 
-    async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up iKuai Connect select entities."""
     coordinator: IkuaiCoordinator = entry.runtime_data
-    
+
     async_add_entities(
-        IkuaiMacModeSelect(coordinator, description) 
-        for description in SELECT_TYPES
+        IkuaiMacModeSelect(coordinator, description) for description in SELECT_TYPES
     )
 
 
@@ -45,9 +44,7 @@ class IkuaiMacModeSelect(CoordinatorEntity[IkuaiCoordinator], SelectEntity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, 
-        coordinator: IkuaiCoordinator, 
-        description: SelectEntityDescription
+        self, coordinator: IkuaiCoordinator, description: SelectEntityDescription
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)

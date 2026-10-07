@@ -1,4 +1,5 @@
 """iKuai Connect 诊断平台."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,8 +13,9 @@ from .const import DOMAIN
 # 在诊断导出中必须遮蔽的敏感配置键（避免凭证泄露）
 _TO_REDACT_KEYS = {"token", "password", "secret"}
 
+
 def _redact_entry_data(entry: ConfigEntry) -> dict[str, Any]:
-    """复制 config entry 数据并遮蔽敏感字段（如 API token）。 """
+    """复制 config entry 数据并遮蔽敏感字段（如 API token）。"""
     data = dict(entry.data)
     options = dict(entry.options)
     for key in _TO_REDACT_KEYS:
@@ -29,6 +31,7 @@ def _redact_entry_data(entry: ConfigEntry) -> dict[str, Any]:
         "data": data,
         "options": options,
     }
+
 
 def _slice_by_device(coordinator: Any, device: DeviceEntry) -> dict[str, Any]:
     """按设备 identifier 截取 ``coordinator.data`` 中与该设备相关的切片。
@@ -68,10 +71,11 @@ def _slice_by_device(coordinator: Any, device: DeviceEntry) -> dict[str, Any]:
                 "backup": data.get("backup"),
             }
         if value.startswith(f"{host}_disk_"):
-            disk_id = value[len(f"{host}_disk_"):]
+            disk_id = value[len(f"{host}_disk_") :]
             return {"disk": (data.get("disks") or {}).get(disk_id)}
     # 无法识别 → 回退全量
     return data
+
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
@@ -82,6 +86,7 @@ async def async_get_config_entry_diagnostics(
         "config_entry": _redact_entry_data(entry),
         "data": coordinator.data or {},
     }
+
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry

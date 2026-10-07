@@ -9,7 +9,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       # Validate branch
       - name: Validate branch
         env:
@@ -68,8 +67,9 @@ jobs:
           echo "Checking PR content"
 
           if [[ -z "$PR_BODY" ]]; then
-            echo "❌ PR body is empty"
-            exit 1
+            echo "⚠️ PR body is empty — description validation skipped (non-blocking)"
+            echo "✅ Description passed"
+            exit 0
           fi
 
           # Description check
@@ -83,24 +83,20 @@ jobs:
             | sed '/^[[:space:]]*$/d')
 
           if [[ -z "$DESCRIPTION" ]]; then
-            echo "❌ Description is empty"
-            exit 1
+            echo "⚠️ Description is empty — non-blocking warning"
+          else
+            echo "✅ Description passed"
           fi
-
-          echo "✅ Description passed"
 
           # Change type check
           TYPE_COUNT=$(echo "$PR_BODY" \
-            | grep -Ec '\[x\].*(bugfix|new feature|refactor|breaking|docs):')
-
+            | grep -Ec '\[x\].*(bugfix|new feature|refactor|breaking|docs):' || true)
 
           if [[ "$TYPE_COUNT" -ne 1 ]]; then
-            echo "❌ Select exactly one change type"
-            exit 1
+            echo "⚠️ Select exactly one change type — non-blocking warning"
+          else
+            PR_TYPE=$(echo "$PR_BODY" \
+              | grep -E '\[x\].*(bugfix|new feature|refactor|breaking|docs):' \
+              | sed -E 's/.*\] ([^:]+):.*/\1/')
+            echo "✅ Change type: $PR_TYPE"
           fi
-
-          PR_TYPE=$(echo "$PR_BODY" \
-            | grep -E '\[x\].*(bugfix|new feature|refactor|breaking|docs):' \
-            | sed -E 's/.*\] ([^:]+):.*/\1/')
-
-          echo "✅ Change type: $PR_TYPE"

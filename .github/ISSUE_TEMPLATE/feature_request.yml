@@ -5,7 +5,6 @@ labels:
   - "enhancement"
 
 body:
-
   - type: textarea
     id: description
     attributes:
@@ -16,7 +15,6 @@ body:
     validations:
       required: true
 
-
   - type: textarea
     id: use_case
     attributes:
@@ -24,7 +22,6 @@ body:
       description: |
         Why is this useful?
         为什么需要这个功能？
-
 
   - type: textarea
     id: additional

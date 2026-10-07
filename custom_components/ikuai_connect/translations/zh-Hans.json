@@ -108,36 +108,36 @@
           "ipv6": { "name": "IPv6 连接数" }
         }
       },
-      "sys_upload_speed": { 
-        "name": "总上传速度", 
-        "state_attributes": { 
-          "ipv6_upload_speed": { "name": "IPv6 上传速度" } 
-        } 
+      "sys_upload_speed": {
+        "name": "总上传速度",
+        "state_attributes": {
+          "ipv6_upload_speed": { "name": "IPv6 上传速度" }
+        }
       },
-      "sys_download_speed": { 
-        "name": "总下载速度", 
-        "state_attributes": { 
-          "ipv6_download_speed": { "name": "IPv6 下载速度" } 
-        } 
+      "sys_download_speed": {
+        "name": "总下载速度",
+        "state_attributes": {
+          "ipv6_download_speed": { "name": "IPv6 下载速度" }
+        }
       },
-      "sys_total_up": { 
-        "name": "总上传流量", 
-        "state_attributes": { 
-          "ipv6_total_upload": { "name": "IPv6 总上传流量" } 
-        } 
+      "sys_total_up": {
+        "name": "总上传流量",
+        "state_attributes": {
+          "ipv6_total_upload": { "name": "IPv6 总上传流量" }
+        }
       },
-      "sys_total_down": { 
-        "name": "总下载流量", 
-        "state_attributes": { 
-          "ipv6_total_download": { "name": "IPv6 总下载流量" } 
-        } 
+      "sys_total_down": {
+        "name": "总下载流量",
+        "state_attributes": {
+          "ipv6_total_download": { "name": "IPv6 总下载流量" }
+        }
       },
       "uptime": {
         "name": "运行时间"
       },
       "temperature": { "name": "系统温度" },
-      "ap_online": { 
-        "name": "在线 AP 数量", 
+      "ap_online": {
+        "name": "在线 AP 数量",
         "state_attributes": {
           "total_ap": { "name": "AP 总数" },
           "offline_ap": { "name": "离线 AP 数" },
@@ -183,7 +183,7 @@
           "lines": { "name": "各线路详情" }
         }
       },
-      "upgrade_status": { 
+      "upgrade_status": {
         "name": "固件更新状态",
         "state_attributes": {
           "current_version": { "name": "当前版本" },
@@ -205,22 +205,22 @@
           "sysbit": { "name": "系统位数" }
         }
       },
-      "latest_backup": { 
-        "name": "最后备份文件", 
+      "latest_backup": {
+        "name": "最后备份文件",
         "state_attributes": {
           "backtype": { "name": "备份类型" },
           "filesize": { "name": "文件大小" },
           "version": { "name": "备份版本" }
         }
-      },      
-      "disk_total_capacity": { 
+      },
+      "disk_total_capacity": {
         "name": "物理总容量",
         "state_attributes": {
           "base_info": { "name": "磁盘基础信息" }
         }
-      },  
+      },
       "disk_usage_rate": { "name": "综合使用率" },
-      "disk_used_capacity": { 
+      "disk_used_capacity": {
         "name": "已用总容量",
         "state_attributes": {
           "partitions": { "name": "分区使用详情" }
@@ -233,9 +233,9 @@
       "start_upgrade": { "name": "开始固件升级" },
       "create_backup": { "name": "立即备份系统配置" }
     },
-    "event": { 
+    "event": {
       "message_center": { "name": "系统消息通知" },
-      "terminal_presence_log": { 
+      "terminal_presence_log": {
         "name": "终端上下线记录",
         "state_attributes": {
           "mac": { "name": "MAC 地址" },
@@ -244,7 +244,7 @@
             "name": "状态",
             "state": {
               "online": "上线",
-              "offline": "下线"            
+              "offline": "下线"
             }
           },
           "online_time": { "name": "在线时长 (秒)" },
@@ -253,30 +253,33 @@
           "vendor": { "name": "生产商" },
           "model": { "name": "设备型号" },
           "id": { "name": "ID" },
-          "timestamp": { "name": "记录时间" }     
+          "timestamp": { "name": "记录时间" }
         }
-      },  
-      "dynamic_ddns_log": { 
-        "name": "动态域名变更记录",       
+      },
+      "dynamic_ddns_log": {
+        "name": "动态域名变更记录",
         "state_attributes": {
           "domain": { "name": "域名" },
           "status": { "name": "状态" },
           "message": { "name": "日志详情" },
-          "ip": {"name": "IP 地址"},
+          "ip": { "name": "IP 地址" },
           "mac": { "name": "MAC 地址" },
           "id": { "name": "ID" },
           "time": { "name": "记录时间" }
         }
       },
-      "wireless_terminal_log": { 
-        "name": "无线终端变更记录",     
+      "wireless_terminal_log": {
+        "name": "无线终端变更记录",
         "state_attributes": {
           "mac": { "name": "MAC 地址" },
           "ssid": { "name": "SSID" },
           "signal": { "name": "信号强度" },
           "ap_mac": { "name": "连接的 AP MAC 地址" },
           "ap_name": { "name": "接入点" },
-          "action":{ "name": "事件", "state":{ "login": "登录", "logout": "退出" }},
+          "action": {
+            "name": "事件",
+            "state": { "login": "登录", "logout": "退出" }
+          },
           "reason": { "name": "状态" },
           "time": { "name": "记录时间" }
         }
@@ -294,7 +297,7 @@
       }
     },
     "select": {
-      "mac_acl_mode": { 
+      "mac_acl_mode": {
         "name": "全局访问控制模式",
         "state": {
           "whitelist": "白名单模式 (放行模式)",
@@ -309,7 +312,7 @@
           "mac_address": { "name": "MAC 地址" },
           "terminal_name": { "name": "终端名称" },
           "comment": { "name": "备注信息" },
-          "schedule": { 
+          "schedule": {
             "name": "生效时间",
             "state": {
               "every_week": "每周",
@@ -317,7 +320,7 @@
               "all_day": "全天"
             }
           },
-          "expires": { 
+          "expires": {
             "name": "过期时间",
             "state": {
               "permanent": "永久"
@@ -326,9 +329,9 @@
           "rule_id": { "name": "规则 ID" }
         }
       }
-    },  
+    },
     "device_tracker": {
-      "ikuai_tracker": { 
+      "ikuai_tracker": {
         "name": "终端追踪",
         "state_attributes": {
           "mac_address": { "name": "MAC 地址" },
