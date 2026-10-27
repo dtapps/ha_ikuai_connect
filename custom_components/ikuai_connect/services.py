@@ -247,16 +247,26 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         ),
     )
     hass.services.async_register(
-        DOMAIN, "call_api_service", async_call_api,
+        DOMAIN,
+        "call_api_service",
+        async_call_api,
         supports_response=SupportsResponse.OPTIONAL,
-        schema=vol.Schema({
-            vol.Optional("device_id"): cv.string,
-            vol.Required("path"): cv.string,
-            vol.Optional("method", default="GET"): vol.In(["GET", "POST", "PUT", "PATCH", "DELETE"]),
-            vol.Optional("params", default=None): vol.Any(None, cv.string, dict, list),
-            vol.Optional("timeout", default=15): vol.All(vol.Coerce(float), vol.Range(min=1, max=120)),
-            vol.Optional("return_raw", default=False): cv.boolean,
-        }),
+        schema=vol.Schema(
+            {
+                vol.Optional("device_id"): cv.string,
+                vol.Required("path"): cv.string,
+                vol.Optional("method", default="GET"): vol.In(
+                    ["GET", "POST", "PUT", "PATCH", "DELETE"]
+                ),
+                vol.Optional("params", default=None): vol.Any(
+                    None, cv.string, dict, list
+                ),
+                vol.Optional("timeout", default=15): vol.All(
+                    vol.Coerce(float), vol.Range(min=1, max=120)
+                ),
+                vol.Optional("return_raw", default=False): cv.boolean,
+            }
+        ),
     )
 
 
