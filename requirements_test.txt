@@ -1,0 +1,6 @@
+# 测试依赖（CI 与本地共用）
+#
+# pytest-homeassistant-custom-component 会按自身版本带入匹配的 homeassistant，
+# 所以这里锁定版本 = 锁定被测的 HA 版本。升级时两者一起动，不要单独升。
+# 当前：pytest-homeassistant-custom-component 0.13.375 ↔ homeassistant 2026.10.4
+pytest-homeassistant-custom-component==0.13.375

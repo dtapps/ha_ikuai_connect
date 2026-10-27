@@ -1,0 +1,66 @@
+# 覆盖率上报到 Codecov（GitHub Actions 侧）
+# 职责：在 GitHub 环境内跑 pytest 生成覆盖率，上传到 Codecov（PR 评论 + 徽章 + patch 状态）。
+# 配置见 .github/codecov.yml。
+# https://github.com/actions/checkout
+# https://github.com/actions/setup-python
+# https://github.com/codecov/codecov-action
+name: Codecov
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+# 同一分支的多次 push 取消旧的运行，避免排队浪费。
+concurrency:
+  group: push-coverage-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+
+      - name: 设置 Python
+        uses: actions/setup-python@v7
+        with:
+          # 与本地开发一致，且贴近 HA 2026.6 运行时（HA 2026.x 已采用 3.14）
+          python-version: "3.14"
+
+      - name: 安装测试依赖
+        run: |
+          python -m pip install --upgrade pip
+          # 完整测试栈：pytest-homeassistant-custom-component 会带入匹配版本的 homeassistant
+          pip install -r requirements_test.txt
+
+      - name: 运行测试并生成覆盖率 + JUnit
+        run: |
+          pytest --cov=custom_components/ikuai_connect \
+                 --cov-report=xml:coverage.xml \
+                 --cov-report=term \
+                 --junitxml=junit.xml \
+                 -o junit_family=legacy \
+                 -q
+
+      - name: 上传覆盖率到 Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          flags: integration
+          fail_ci_if_error: false
+
+      - name: 上传测试结果到 Codecov
+        # test-results 上传测试用例通过/失败/不稳定数据（Codecov 的 Tests 面板 / PR 评论）
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./junit.xml
+          fail_ci_if_error: false

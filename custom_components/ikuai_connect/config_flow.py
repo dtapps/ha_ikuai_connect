@@ -6,7 +6,6 @@ import re
 from typing import Any
 
 import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
@@ -96,21 +95,23 @@ class IkuaiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 try:
                     api = IkuaiAPI(self.hass, host, token)
                     await api.get_system_info()
-
-                    # 设置物理唯一 ID (基于 Host 地址)
-                    await self.async_set_unique_id(host.lower())
-                    self._abort_if_unique_id_configured()
-
-                    return self.async_create_entry(
-                        title=name,
-                        data={
-                            CONF_HOST: host,
-                            CONF_TOKEN: token,
-                            CONF_TRACKER_CONFIG: {},
-                        },
-                    )
                 except Exception:  # pylint: disable=broad-except
                     errors["base"] = "cannot_connect"
+
+            if not errors:
+                # 唯一 ID 判定必须留在 try 之外：_abort_if_unique_id_configured()
+                # 抛的是 AbortFlow，被上面的 broad except 吞掉会误报 cannot_connect。
+                await self.async_set_unique_id(host.lower())
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=name,
+                    data={
+                        CONF_HOST: host,
+                        CONF_TOKEN: token,
+                        CONF_TRACKER_CONFIG: {},
+                    },
+                )
 
         return self.async_show_form(
             step_id="user",

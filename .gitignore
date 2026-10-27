@@ -1,8 +1,17 @@
+# Virtualenv
+.venv/
+venv/
+
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.egg-info/
 .pytest_cache/
+
+# Coverage
 .coverage
+coverage.xml
+coverage.lcov
+junit.xml
 htmlcov/

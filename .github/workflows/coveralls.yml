@@ -1,0 +1,60 @@
+# 覆盖率上报到 Coveralls（独立工作流）
+#
+# 为什么独立：
+#   - 与 Codecov 解耦：Coveralls 侧故障 / token 失效不会拖垮 Codecov 上传；
+#   - 凭证隔离：只用内置 GITHUB_TOKEN，不扩散到 Codecov 流程；
+#   - Codecov 那条（.github/workflows/codecov.yml）已经跑通，不动它。
+#
+# 代价：本工作流会把测试再跑一遍（与 codecov.yml 重复）。这是「独立」换来的隔离性。
+#
+# 参考：
+#   https://github.com/coverallsapp/github-action
+name: Coveralls
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: coveralls-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    env:
+      COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+
+      - name: 设置 Python
+        uses: actions/setup-python@v7
+        with:
+          # 与本地开发一致，且贴近 HA 2026.6 运行时（HA 2026.x 已采用 3.14）
+          python-version: "3.14"
+
+      - name: 安装测试依赖
+        run: |
+          python -m pip install --upgrade pip
+          # 完整测试栈：pytest-homeassistant-custom-component 会带入匹配版本的 homeassistant
+          pip install -r requirements_test.txt
+
+      - name: 运行测试并生成覆盖率
+        run: |
+          pytest --cov=custom_components/ikuai_connect \
+                 --cov-report=lcov:coverage.lcov \
+                 -q
+
+      - name: 上传覆盖率到 Coveralls
+        if: env.COVERALLS_REPO_TOKEN != ''
+        continue-on-error: true
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./coverage.lcov
+          format: lcov
+          flag-name: integration
