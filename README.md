@@ -1,7 +1,7 @@
 # <img src="custom_components/ikuai_connect/brand/icon.png" width="64"> iKuai Connect for Home Assistant
 
-[![Release](https://img.shields.io/github/v/release/PraxiGEN/ha_ikuai_connect)](https://github.com/PraxiGEN/ha_ikuai_connect/releases)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/PraxiGENha_ikuai_connect/blob/main/LICENSE)
+[![Release](https://img.shields.io/github/v/release/dtapps/ha_ikuai_connect)](https://github.com/dtapps/ha_ikuai_connect/releases)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/dtapps/ha_ikuai_connect/blob/main/LICENSE)
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 
 ## iKuai Connect 是专为 Home Assistant 打造的爱快（iKuai）路由器深度集成插件。不同于传统的网页模拟登录，本项目完全基于 **iKuai OpenAPI 3.1 (v4.0接口)** 构建，提供极速、稳定且安全的网络监控与自动化体验。
@@ -32,7 +32,7 @@
 2. 选择"自定义存储库"
 3. 在存储库字段输入：
    ```yaml
-   https://github.com/PraxiGEN/ha_ikuai_connect
+   https://github.com/dtapps/ha_ikuai_connect
    ```
 4. 类别选择"集成"
 5. 点击"添加"保存
@@ -43,7 +43,7 @@
 
 1. 下载最新的:
    ```yaml
-   https://github.com/PraxiGEN/ha_ikuai_connect
+   https://github.com/dtapps/ha_ikuai_connect
    ```
 2. 解压并将`ikuai_connect`文件夹放入Home Assistant的`custom_components`目录
 3. 重启Home Assistant
