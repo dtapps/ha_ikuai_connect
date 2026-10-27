@@ -13,7 +13,7 @@ help: ## 显示所有可用目标
 # ==================== 代码格式化 ====================
 
 # 一键格式化全部
-format: format-py format-web format-toml format-txt format-markdown ## 一键格式化全部
+format: format-py format-web format-toml format-txt format-markdown format-json ## 一键格式化全部
 	@echo "✅ 格式化完成"
 
 # Python 格式化（ruff 独立二进制，无需 venv/pip；已用官方脚本装到 ~/.local/bin）
@@ -50,6 +50,34 @@ format-markdown:
 		markdownfmt -w "$$f" || { echo "❌ markdownfmt 格式化失败: $$f"; exit 1; }; \
 	done
 	@echo "[Format] Markdown 格式化完成（markdownfmt）。"
+
+# 格式化 JSON 文件
+#
+# 注意：gojq 默认按字母序重排 key（它没有 -S，因为总是排序）。
+# 但 hassfest 要求 manifest.json 的 key 顺序为 domain、name 打头，其余字母序，
+# 所以 manifest.json 不交给 gojq，改由下面的 python 步骤按 hassfest 规则排序。
+.PHONY: format-json
+format-json:
+	@echo "[Format] 格式化 JSON 文件..."
+	@command -v gojq >/dev/null 2>&1 || { \
+		echo "⚠️  gojq 未安装，跳过 JSON 格式化。" ; \
+		echo "   提示: 可通过运行 'go install github.com/itchyny/gojq/cmd/gojq@latest' 安装" ; \
+		exit 0 ; \
+	}
+	@echo "[Format] 使用 gojq 格式化 JSON..."
+	@for f in $(shell find custom_components -type f -name '*.json' ! -name 'manifest.json'); do \
+		[ -f "$$f" ] || continue; \
+		if gojq . "$$f" > "$$f.tmp" 2>/dev/null; then \
+			mv "$$f.tmp" "$$f"; \
+		else \
+			echo "❌ gojq 格式化失败: $$f"; rm -f "$$f.tmp"; exit 1; \
+		fi; \
+	done
+	@echo "[Format] 按 hassfest 规则排序 manifest.json（domain、name 打头）..."
+	@for f in $(shell find custom_components -type f -name 'manifest.json'); do \
+		python3 -c 'import json,sys; p=sys.argv[1]; d=json.load(open(p,encoding="utf-8")); rest=sorted(k for k in d if k not in ("domain","name")); o={k:d[k] for k in (["domain","name"]+rest) if k in d}; fh=open(p,"w",encoding="utf-8"); json.dump(o,fh,ensure_ascii=False,indent=2); fh.write("\n")' "$$f" || { echo "❌ manifest 排序失败: $$f"; exit 1; }; \
+	done
+	@echo "[Format] JSON 格式化完成（gojq + manifest 顺序修正）。"
 
 # ==================== 测试 ====================
 

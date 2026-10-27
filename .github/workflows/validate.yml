@@ -1,0 +1,54 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 同一分支的多次触发取消旧的运行，避免排队浪费。
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hassfest:
+    name: Hassfest 结构合规校验
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+      - name: Hassfest 校验（manifest / 翻译 / 配置流一致性）
+        uses: home-assistant/actions/hassfest@master
+
+  hacs:
+    name: HACS 合规校验
+    runs-on: ubuntu-latest
+    steps:
+      - name: HACS validation
+        uses: hacs/action@main
+        with:
+          category: integration
+
+  pytest:
+    name: Pytest 单元测试
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+      - name: 设置 Python
+        uses: actions/setup-python@v7
+        with:
+          # 与本地开发一致，且贴近 HA 2026.6 运行时（HA 2026.x 已采用 3.14）
+          python-version: "3.14"
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_test.txt
+      - name: 运行 pytest
+        run: pytest -qq
