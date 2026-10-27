@@ -1,89 +1,113 @@
-name: Auto Release Draft
+name: Release
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "custom_components/**/manifest.json"
   workflow_dispatch:
+    inputs:
+      version:
+        description: "版本号（如 1.2.3，可带前缀 v）"
+        required: true
+        type: string
 
 permissions:
   contents: write
 
-jobs:
-  build-and-draft:
-    runs-on: ubuntu-latest
+# 同一分支的多次触发取消旧的运行，避免排队浪费。
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
 
+jobs:
+  release:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: 检出代码
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      # 版本号严格比较
-      - name: Version Increment Check
-        id: check
+      - name: 设置 Python
+        uses: actions/setup-python@v7
+        with:
+          # 与本地开发一致，且贴近 HA 2026.6 运行时（HA 2026.x 已采用 3.14）
+          python-version: "3.14"
+
+      - name: 动态写入指定版本号到 manifest
+        id: bump
+        env:
+          VERSION_INPUT: ${{ github.event.inputs.version }}
         run: |
-          MANIFEST_FILE=$(ls custom_components/*/manifest.json | head -n 1)
-          COMPONENT_NAME=$(basename $(dirname $MANIFEST_FILE))
-          NEW_VERSION=$(python3 -c "import json; print(json.load(open('$MANIFEST_FILE'))['version'])")
-
-          LATEST_TAG=$(git tag -l "v*" --sort=-v:refname | head -n 1)
-          if [ -z "$LATEST_TAG" ]; then
-            LATEST_TAG="v0.0.0"
+          VERSION="${VERSION_INPUT#[vV]}"
+          VERSION="$(printf '%s' "$VERSION" | tr -d '[:space:]')"
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::版本号格式不正确：'$VERSION'，应形如 1.2.3"
+            exit 1
           fi
-          OLD_VERSION=${LATEST_TAG#v}
+          python - "$VERSION" <<'PY'
+          import json
+          import sys
 
-          echo "检测到新版本: $NEW_VERSION"
-          echo "检测到旧版本: $OLD_VERSION"
+          path = "custom_components/ikuai_connect/manifest.json"
+          with open(path, encoding="utf-8") as f:
+              data = json.load(f)
+          data["version"] = sys.argv[1]
+          with open(path, "w", encoding="utf-8") as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
+              f.write("\n")
+          print(f"manifest version -> {data['version']}")
+          PY
+          echo "new_version=$VERSION" >> "$GITHUB_OUTPUT"
 
-          python3 -m pip install packaging
-          IS_INCREASED=$(python3 -c "from packaging import version; print(version.parse('$NEW_VERSION') > version.parse('$OLD_VERSION'))")
+      - name: 生成变更日志（上一版 → 本版）
+        id: changelog
+        run: |
+          NEW_TAG="v${{ steps.bump.outputs.new_version }}"
+          # 上一个已存在的版本 tag（排除本次要建的 tag，防止重跑时范围为空）
+          PREV_TAG=$(git tag -l "v*" --sort=-v:refname | grep -vx "$NEW_TAG" | head -n 1 || true)
+          REPO_URL="https://github.com/${{ github.repository }}"
 
-          if [ "$IS_INCREASED" = "True" ]; then
-            echo "compare_result=success" >> $GITHUB_OUTPUT
-            echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-            echo "comp_name=$COMPONENT_NAME" >> $GITHUB_OUTPUT
-
-            COMMIT_TITLE=$(git log -1 --pretty=format:"%s")
-            echo "commit_title=$COMMIT_TITLE" >> $GITHUB_OUTPUT
-
-            if [[ $NEW_VERSION == *"beta"* ]] || [[ $NEW_VERSION == *"rc"* ]] || [[ $NEW_VERSION == *"alpha"* ]]; then
-              echo "is_prerelease=true" >> $GITHUB_OUTPUT
-            else
-              echo "is_prerelease=false" >> $GITHUB_OUTPUT
-            fi
+          if [ -z "$PREV_TAG" ]; then
+            RANGE="HEAD"
+            PREV_DESC="首次发布，以下为本版全部提交："
+            COMPARE=""
           else
-            echo "compare_result=skip" >> $GITHUB_OUTPUT
-            echo "❌ 错误：新版本 $NEW_VERSION 并不大于旧版本 $OLD_VERSION。跳过发布。"
+            RANGE="${PREV_TAG}..HEAD"
+            PREV_DESC="自 ${PREV_TAG} 以来的全部变化："
+            COMPARE="**完整对比 / Full Changelog**: ${REPO_URL}/compare/${PREV_TAG}...${NEW_TAG}"
           fi
 
-      # 构建 ZIP
-      - name: Create ZIP file
-        if: steps.check.outputs.compare_result == 'success'
-        run: |
-          cd custom_components/${{ steps.check.outputs.comp_name }}
-          zip -r ../../${{ steps.check.outputs.comp_name }}.zip .
+          {
+            echo "## 变更内容 / Changes"
+            echo ""
+            echo "${PREV_DESC}"
+            echo ""
+            git log --no-merges --pretty=format:'- %s (%h)' "$RANGE"
+            echo ""
+            echo ""
+            echo "## 提交统计 / Stats"
+            echo ""
+            echo "- 提交数: $(git log --no-merges --oneline "$RANGE" | wc -l | tr -d ' ')"
+            echo ""
+            printf '%s\n' "$COMPARE"
+          } > RELEASE_NOTES.md
 
-      # 创建 Release Draft
-      - name: Create GitHub Release Draft
-        if: steps.check.outputs.compare_result == 'success'
+          echo "=== RELEASE_NOTES.md ==="
+          cat RELEASE_NOTES.md
+
+      - name: 打包 custom_components 为发布附件
+        run: |
+          rm -f ikuai_connect.zip
+          zip -r ikuai_connect.zip custom_components/ikuai_connect \
+            -x "*/__pycache__/*" "*.pyc" "*/.DS_Store"
+          echo "=== 附件内容预览 ==="
+          unzip -l ikuai_connect.zip | head -30
+
+      - name: 发布 GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: v${{ steps.check.outputs.version }}
-
-          name: v${{ steps.check.outputs.version }} - ${{ steps.check.outputs.commit_title }}
-
-          files: |
-            ${{ steps.check.outputs.comp_name }}.zip
-
-          draft: true
-
-          prerelease: ${{ steps.check.outputs.is_prerelease }}
-
-          generate_release_notes: true
-
+          tag_name: v${{ steps.bump.outputs.new_version }}
+          name: v${{ steps.bump.outputs.new_version }}
           target_commitish: ${{ github.sha }}
-
+          body_path: RELEASE_NOTES.md
+          files: ikuai_connect.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

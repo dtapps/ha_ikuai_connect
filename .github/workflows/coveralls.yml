@@ -18,6 +18,7 @@ on:
 permissions:
   contents: read
 
+# 同一分支的多次触发取消旧的运行，避免排队浪费。
 concurrency:
   group: coveralls-${{ github.ref }}
   cancel-in-progress: true

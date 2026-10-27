@@ -1,23 +1,8 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Connect to iKuai Router",
-        "description": "Please enter the iKuai OpenAPI address and your personal API token. **HTTPS is required**.\nYou may assign a custom name for each iKuai connection to distinguish different routers (e.g., Main Router, Second Floor Router).\nNote: Only **iKuai 4.0.222** and above are supported.",
-        "data": {
-          "name": "Connection Name (e.g., Main Router)",
-          "host": "Host Address (e.g., https://10.10.10.1)",
-          "token": "Personal API Token"
-        }
-      },
-      "reconfigure": {
-        "title": "Reconfigure iKuai Connection",
-        "description": "Update the connection address or token for the current integration.",
-        "data": {
-          "host": "Host Address",
-          "token": "Personal API Token"
-        }
-      }
+    "abort": {
+      "already_configured": "This iKuai router is already configured.",
+      "reconfigure_successful": "Reconfiguration successful."
     },
     "error": {
       "cannot_connect": "Unable to connect to iKuai. Please check the address, token, and whether HTTPS is enabled.",
@@ -25,274 +10,183 @@
       "name_exists": "This integration name is already in use. Please choose another name.",
       "unknown": "An unknown error occurred."
     },
-    "abort": {
-      "already_configured": "This iKuai router is already configured.",
-      "reconfigure_successful": "Reconfiguration successful."
-    }
-  },
-  "options": {
     "step": {
-      "init": {
-        "title": "iKuai Connect Options",
+      "reconfigure": {
         "data": {
-          "manage_action": "Terminal Tracking Management",
-          "scan_interval": "Data Update Interval (seconds)",
-          "offline_grace_period": "Global Offline Grace Period (minutes)"
-        }
+          "host": "Host Address",
+          "token": "Personal API Token"
+        },
+        "description": "Update the connection address or token for the current integration.",
+        "title": "Reconfigure iKuai Connection"
       },
-      "scan": {
-        "title": "Select Terminals to Track",
-        "description": "Please select the terminals you want Home Assistant to track. The list includes both currently online and recently offline devices; a tracked offline device shows as not_home until it reconnects.",
+      "user": {
         "data": {
-          "devices": "Terminal List (Online + Offline)"
-        }
-      },
-      "configure_devices": {
-        "title": "Configure Terminal Tracking Options",
-        "description": "Configuring **{device}**. Please set a display name and offline grace period.\nRemaining devices: {remaining}.\nTip: Mobile devices typically require ~10 minutes.",
-        "data": {
-          "name": "Display Name",
-          "offline_grace_period": "Offline Grace Period (minutes)"
-        }
-      },
-      "remove": {
-        "title": "Remove Tracked Terminals",
-        "description": "Select the terminals you no longer want to track. Their entities will be removed.",
-        "data": {
-          "devices_to_remove": "Tracked Terminal List"
-        }
-      }
-    },
-    "error": {
-      "no_devices_selected": "You did not select any devices.",
-      "no_new_devices_found": "No new online terminals were found."
-    }
-  },
-  "selector": {
-    "manage_action": {
-      "options": {
-        "none": "None (Save basic settings and exit)",
-        "add": "Add New Terminals",
-        "remove": "Remove Existing Terminals"
+          "host": "Host Address (e.g., https://10.10.10.1)",
+          "name": "Connection Name (e.g., Main Router)",
+          "token": "Personal API Token"
+        },
+        "description": "Please enter the iKuai OpenAPI address and your personal API token. **HTTPS is required**.\nYou may assign a custom name for each iKuai connection to distinguish different routers (e.g., Main Router, Second Floor Router).\nNote: Only **iKuai 4.0.222** and above are supported.",
+        "title": "Connect to iKuai Router"
       }
     }
   },
   "entity": {
-    "sensor": {
-      "cpu_load": { "name": "CPU Load" },
-      "memory_usage": {
-        "name": "Memory Usage",
-        "state_attributes": {
-          "total": { "name": "Total Memory" },
-          "available": { "name": "Available Memory" },
-          "free": { "name": "Free Memory" },
-          "cached": { "name": "Cached" },
-          "buffers": { "name": "Buffers" }
-        }
+    "button": {
+      "check_update": {
+        "name": "Check Firmware Update"
       },
-      "online_users": {
-        "name": "Total Online Devices",
-        "state_attributes": {
-          "count_wired": { "name": "Wired Devices" },
-          "count_2g": { "name": "2.4G Wireless" },
-          "count_5g": { "name": "5G Wireless" },
-          "count_wireless": { "name": "Wireless Total" }
-        }
+      "create_backup": {
+        "name": "Backup System Configuration Now"
       },
-      "connection_count": {
-        "name": "Current Connection Count",
-        "state_attributes": {
-          "tcp": { "name": "TCP Connections" },
-          "udp": { "name": "UDP Connections" },
-          "icmp": { "name": "ICMP Connections" },
-          "ipv6": { "name": "IPv6 Connections" }
-        }
+      "reboot": {
+        "name": "Reboot Router"
       },
-      "sys_upload_speed": {
-        "name": "Total Upload Speed",
+      "start_upgrade": {
+        "name": "Start Firmware Upgrade"
+      }
+    },
+    "device_tracker": {
+      "ikuai_tracker": {
+        "name": "Terminal Tracker",
         "state_attributes": {
-          "ipv6_upload_speed": { "name": "IPv6 Upload Speed" }
-        }
-      },
-      "sys_download_speed": {
-        "name": "Total Download Speed",
-        "state_attributes": {
-          "ipv6_download_speed": { "name": "IPv6 Download Speed" }
-        }
-      },
-      "sys_total_up": {
-        "name": "Total Upload Traffic",
-        "state_attributes": {
-          "ipv6_total_upload": { "name": "IPv6 Total Upload Traffic" }
-        }
-      },
-      "sys_total_down": {
-        "name": "Total Download Traffic",
-        "state_attributes": {
-          "ipv6_total_download": { "name": "IPv6 Total Download Traffic" }
-        }
-      },
-      "uptime": {
-        "name": "System Uptime"
-      },
-      "temperature": { "name": "System Temperature" },
-      "ap_online": {
-        "name": "Online AP Count",
-        "state_attributes": {
-          "total_ap": { "name": "Total APs" },
-          "offline_ap": { "name": "Offline APs" },
-          "roaming_supported": { "name": "Roaming-capable APs" },
-          "prefer_5g_aps": { "name": "5G-preferred APs" },
-          "clients_2g": { "name": "2.4G Clients" },
-          "clients_5g": { "name": "5G Clients" },
-          "active_clients": { "name": "Active Clients" },
-          "signal_coverage": { "name": "Signal Coverage" },
-          "network_delay": { "name": "Network Delay" },
-          "packet_loss": { "name": "Packet Loss" },
-          "airtime_health_score": { "name": "Airtime Health Score" }
-        }
-      },
-      "upload_speed": { "name": "{iface} Upload Speed" },
-      "download_speed": { "name": "{iface} Download Speed" },
-      "total_up": { "name": "{iface} Total Upload" },
-      "total_down": { "name": "{iface} Total Download" },
-      "wan_connection_status": {
-        "name": "{iface} WAN Connection Status",
-        "state": {
-          "online": "Online",
-          "offline": "Offline"
-        },
-        "state_attributes": {
-          "protocol": { "name": "Dial Protocol" },
-          "ipv4": { "name": "IPv4 Address" },
-          "gateway": { "name": "Gateway" },
-          "auto_switch": { "name": "Auto Switch" },
-          "errmsg": { "name": "Error Message" },
-          "parent_interface": { "name": "Parent Interface" }
-        }
-      },
-      "wan_ipv4_addr": { "name": "{iface} WAN IPv4 Address" },
-      "wan_v6_upload_speed": { "name": "{iface} IPv6 Upload Speed" },
-      "wan_v6_download_speed": { "name": "{iface} IPv6 Download Speed" },
-      "wan_v6_total_up": { "name": "{iface} IPv6 Total Upload" },
-      "wan_v6_total_down": { "name": "{iface} IPv6 Total Download" },
-      "wan_v6_conn": { "name": "{iface} IPv6 Connection Count" },
-      "wan_balance_snapshot": {
-        "name": "WAN Load Balance Snapshot",
-        "state_attributes": {
-          "lines": { "name": "Per-Line Details" }
-        }
-      },
-      "upgrade_status": {
-        "name": "Firmware Upgrade Status",
-        "state_attributes": {
-          "current_version": { "name": "Current Version" },
-          "latest_version": { "name": "Latest Version" },
-          "version_type": { "name": "Version Type" },
-          "build_date": { "name": "Build Date" },
-          "update_content": { "name": "Update Content" },
-          "last_check": { "name": "Last Check" }
-        }
-      },
-      "firmware_version": {
-        "name": "Firmware Version",
-        "state_attributes": {
-          "version": { "name": "Current Version" },
-          "verstring": { "name": "Full Version String" },
-          "modelname": { "name": "Model Name" },
-          "build_date": { "name": "Build Date" },
-          "arch": { "name": "Architecture" },
-          "sysbit": { "name": "System Bits" }
-        }
-      },
-      "latest_backup": {
-        "name": "Latest Backup File",
-        "state_attributes": {
-          "backtype": { "name": "Backup Type" },
-          "filesize": { "name": "File Size" },
-          "version": { "name": "Backup Version" }
-        }
-      },
-      "disk_total_capacity": {
-        "name": "Total Disk Capacity",
-        "state_attributes": {
-          "base_info": { "name": "Disk Base Info" }
-        }
-      },
-      "disk_usage_rate": { "name": "Overall Usage Rate" },
-      "disk_used_capacity": {
-        "name": "Used Disk Capacity",
-        "state_attributes": {
-          "partitions": { "name": "Partition Usage Details" }
+          "ap_mac": {
+            "name": "AP MAC Address"
+          },
+          "ip_address": {
+            "name": "IP Address"
+          },
+          "mac_address": {
+            "name": "MAC Address"
+          },
+          "uplink_addr": {
+            "name": "Uplink Address"
+          }
         }
       }
     },
-    "button": {
-      "reboot": { "name": "Reboot Router" },
-      "check_update": { "name": "Check Firmware Update" },
-      "start_upgrade": { "name": "Start Firmware Upgrade" },
-      "create_backup": { "name": "Backup System Configuration Now" }
-    },
     "event": {
-      "message_center": { "name": "System Message Notification" },
-      "terminal_presence_log": {
-        "name": "Terminal Online and Offline Log",
-        "state_attributes": {
-          "mac": { "name": "MAC Address" },
-          "ip": { "name": "IP Address" },
-          "action": {
-            "name": "Status",
-            "state": {
-              "online": "Online",
-              "offline": "Offline"
-            }
-          },
-          "online_time": { "name": "Online Duration (seconds)" },
-          "today_total": { "name": "Today's Total" },
-          "os": { "name": "Operating System" },
-          "vendor": { "name": "Vendor" },
-          "model": { "name": "Device Model" },
-          "id": { "name": "ID" },
-          "timestamp": { "name": "Timestamp" }
-        }
-      },
       "dynamic_ddns_log": {
         "name": "Dynamic DDNS Change Log",
         "state_attributes": {
-          "domain": { "name": "Domain" },
-          "status": { "name": "Status" },
-          "message": { "name": "Log Details" },
-          "ip": { "name": "IP Address" },
-          "mac": { "name": "MAC Address" },
-          "id": { "name": "ID" },
-          "time": { "name": "Timestamp" }
+          "domain": {
+            "name": "Domain"
+          },
+          "id": {
+            "name": "ID"
+          },
+          "ip": {
+            "name": "IP Address"
+          },
+          "mac": {
+            "name": "MAC Address"
+          },
+          "message": {
+            "name": "Log Details"
+          },
+          "status": {
+            "name": "Status"
+          },
+          "time": {
+            "name": "Timestamp"
+          }
+        }
+      },
+      "message_center": {
+        "name": "System Message Notification"
+      },
+      "system_log": {
+        "name": "System Log Events",
+        "state_attributes": {
+          "content": {
+            "name": "Content"
+          },
+          "id": {
+            "name": "ID"
+          },
+          "level": {
+            "name": "Level"
+          },
+          "module": {
+            "name": "Module"
+          },
+          "process": {
+            "name": "Process"
+          },
+          "timestamp": {
+            "name": "Timestamp"
+          }
+        }
+      },
+      "terminal_presence_log": {
+        "name": "Terminal Online and Offline Log",
+        "state_attributes": {
+          "action": {
+            "name": "Status",
+            "state": {
+              "offline": "Offline",
+              "online": "Online"
+            }
+          },
+          "id": {
+            "name": "ID"
+          },
+          "ip": {
+            "name": "IP Address"
+          },
+          "mac": {
+            "name": "MAC Address"
+          },
+          "model": {
+            "name": "Device Model"
+          },
+          "online_time": {
+            "name": "Online Duration (seconds)"
+          },
+          "os": {
+            "name": "Operating System"
+          },
+          "timestamp": {
+            "name": "Timestamp"
+          },
+          "today_total": {
+            "name": "Today's Total"
+          },
+          "vendor": {
+            "name": "Vendor"
+          }
         }
       },
       "wireless_terminal_log": {
         "name": "Wireless Terminal Change Log",
         "state_attributes": {
-          "mac": { "name": "MAC Address" },
-          "ssid": { "name": "SSID" },
-          "signal": { "name": "Signal Strength" },
-          "ap_mac": { "name": "AP MAC Address" },
-          "ap_name": { "name": "Access Point" },
           "action": {
             "name": "Event",
-            "state": { "login": "Login", "logout": "Logout" }
+            "state": {
+              "login": "Login",
+              "logout": "Logout"
+            }
           },
-          "reason": { "name": "Reason" },
-          "time": { "name": "Timestamp" }
-        }
-      },
-      "system_log": {
-        "name": "System Log Events",
-        "state_attributes": {
-          "content": { "name": "Content" },
-          "level": { "name": "Level" },
-          "module": { "name": "Module" },
-          "process": { "name": "Process" },
-          "id": { "name": "ID" },
-          "timestamp": { "name": "Timestamp" }
+          "ap_mac": {
+            "name": "AP MAC Address"
+          },
+          "ap_name": {
+            "name": "Access Point"
+          },
+          "mac": {
+            "name": "MAC Address"
+          },
+          "reason": {
+            "name": "Reason"
+          },
+          "signal": {
+            "name": "Signal Strength"
+          },
+          "ssid": {
+            "name": "SSID"
+          },
+          "time": {
+            "name": "Timestamp"
+          }
         }
       }
     },
@@ -300,25 +194,296 @@
       "mac_acl_mode": {
         "name": "Global Access Control Mode",
         "state": {
-          "whitelist": "Whitelist Mode (Allow)",
-          "blacklist": "Blacklist Mode (Block)"
+          "blacklist": "Blacklist Mode (Block)",
+          "whitelist": "Whitelist Mode (Allow)"
         }
+      }
+    },
+    "sensor": {
+      "ap_online": {
+        "name": "Online AP Count",
+        "state_attributes": {
+          "active_clients": {
+            "name": "Active Clients"
+          },
+          "airtime_health_score": {
+            "name": "Airtime Health Score"
+          },
+          "clients_2g": {
+            "name": "2.4G Clients"
+          },
+          "clients_5g": {
+            "name": "5G Clients"
+          },
+          "network_delay": {
+            "name": "Network Delay"
+          },
+          "offline_ap": {
+            "name": "Offline APs"
+          },
+          "packet_loss": {
+            "name": "Packet Loss"
+          },
+          "prefer_5g_aps": {
+            "name": "5G-preferred APs"
+          },
+          "roaming_supported": {
+            "name": "Roaming-capable APs"
+          },
+          "signal_coverage": {
+            "name": "Signal Coverage"
+          },
+          "total_ap": {
+            "name": "Total APs"
+          }
+        }
+      },
+      "connection_count": {
+        "name": "Current Connection Count",
+        "state_attributes": {
+          "icmp": {
+            "name": "ICMP Connections"
+          },
+          "ipv6": {
+            "name": "IPv6 Connections"
+          },
+          "tcp": {
+            "name": "TCP Connections"
+          },
+          "udp": {
+            "name": "UDP Connections"
+          }
+        }
+      },
+      "cpu_load": {
+        "name": "CPU Load"
+      },
+      "disk_total_capacity": {
+        "name": "Total Disk Capacity",
+        "state_attributes": {
+          "base_info": {
+            "name": "Disk Base Info"
+          }
+        }
+      },
+      "disk_usage_rate": {
+        "name": "Overall Usage Rate"
+      },
+      "disk_used_capacity": {
+        "name": "Used Disk Capacity",
+        "state_attributes": {
+          "partitions": {
+            "name": "Partition Usage Details"
+          }
+        }
+      },
+      "download_speed": {
+        "name": "{iface} Download Speed"
+      },
+      "firmware_version": {
+        "name": "Firmware Version",
+        "state_attributes": {
+          "arch": {
+            "name": "Architecture"
+          },
+          "build_date": {
+            "name": "Build Date"
+          },
+          "modelname": {
+            "name": "Model Name"
+          },
+          "sysbit": {
+            "name": "System Bits"
+          },
+          "version": {
+            "name": "Current Version"
+          },
+          "verstring": {
+            "name": "Full Version String"
+          }
+        }
+      },
+      "latest_backup": {
+        "name": "Latest Backup File",
+        "state_attributes": {
+          "backtype": {
+            "name": "Backup Type"
+          },
+          "filesize": {
+            "name": "File Size"
+          },
+          "version": {
+            "name": "Backup Version"
+          }
+        }
+      },
+      "memory_usage": {
+        "name": "Memory Usage",
+        "state_attributes": {
+          "available": {
+            "name": "Available Memory"
+          },
+          "buffers": {
+            "name": "Buffers"
+          },
+          "cached": {
+            "name": "Cached"
+          },
+          "free": {
+            "name": "Free Memory"
+          },
+          "total": {
+            "name": "Total Memory"
+          }
+        }
+      },
+      "online_users": {
+        "name": "Total Online Devices",
+        "state_attributes": {
+          "count_2g": {
+            "name": "2.4G Wireless"
+          },
+          "count_5g": {
+            "name": "5G Wireless"
+          },
+          "count_wired": {
+            "name": "Wired Devices"
+          },
+          "count_wireless": {
+            "name": "Wireless Total"
+          }
+        }
+      },
+      "sys_download_speed": {
+        "name": "Total Download Speed",
+        "state_attributes": {
+          "ipv6_download_speed": {
+            "name": "IPv6 Download Speed"
+          }
+        }
+      },
+      "sys_total_down": {
+        "name": "Total Download Traffic",
+        "state_attributes": {
+          "ipv6_total_download": {
+            "name": "IPv6 Total Download Traffic"
+          }
+        }
+      },
+      "sys_total_up": {
+        "name": "Total Upload Traffic",
+        "state_attributes": {
+          "ipv6_total_upload": {
+            "name": "IPv6 Total Upload Traffic"
+          }
+        }
+      },
+      "sys_upload_speed": {
+        "name": "Total Upload Speed",
+        "state_attributes": {
+          "ipv6_upload_speed": {
+            "name": "IPv6 Upload Speed"
+          }
+        }
+      },
+      "temperature": {
+        "name": "System Temperature"
+      },
+      "total_down": {
+        "name": "{iface} Total Download"
+      },
+      "total_up": {
+        "name": "{iface} Total Upload"
+      },
+      "upgrade_status": {
+        "name": "Firmware Upgrade Status",
+        "state_attributes": {
+          "build_date": {
+            "name": "Build Date"
+          },
+          "current_version": {
+            "name": "Current Version"
+          },
+          "last_check": {
+            "name": "Last Check"
+          },
+          "latest_version": {
+            "name": "Latest Version"
+          },
+          "update_content": {
+            "name": "Update Content"
+          },
+          "version_type": {
+            "name": "Version Type"
+          }
+        }
+      },
+      "upload_speed": {
+        "name": "{iface} Upload Speed"
+      },
+      "uptime": {
+        "name": "System Uptime"
+      },
+      "wan_balance_snapshot": {
+        "name": "WAN Load Balance Snapshot",
+        "state_attributes": {
+          "lines": {
+            "name": "Per-Line Details"
+          }
+        }
+      },
+      "wan_connection_status": {
+        "name": "{iface} WAN Connection Status",
+        "state": {
+          "offline": "Offline",
+          "online": "Online"
+        },
+        "state_attributes": {
+          "auto_switch": {
+            "name": "Auto Switch"
+          },
+          "errmsg": {
+            "name": "Error Message"
+          },
+          "gateway": {
+            "name": "Gateway"
+          },
+          "ipv4": {
+            "name": "IPv4 Address"
+          },
+          "parent_interface": {
+            "name": "Parent Interface"
+          },
+          "protocol": {
+            "name": "Dial Protocol"
+          }
+        }
+      },
+      "wan_ipv4_addr": {
+        "name": "{iface} WAN IPv4 Address"
+      },
+      "wan_v6_conn": {
+        "name": "{iface} IPv6 Connection Count"
+      },
+      "wan_v6_download_speed": {
+        "name": "{iface} IPv6 Download Speed"
+      },
+      "wan_v6_total_down": {
+        "name": "{iface} IPv6 Total Download"
+      },
+      "wan_v6_total_up": {
+        "name": "{iface} IPv6 Total Upload"
+      },
+      "wan_v6_upload_speed": {
+        "name": "{iface} IPv6 Upload Speed"
       }
     },
     "switch": {
       "mac_rule": {
         "name": "MAC Access Control",
         "state_attributes": {
-          "mac_address": { "name": "MAC Address" },
-          "terminal_name": { "name": "Terminal Name" },
-          "comment": { "name": "Comment" },
-          "schedule": {
-            "name": "Effective Time",
-            "state": {
-              "every_week": "Every Week",
-              "specific_date": "Specific Date",
-              "all_day": "All Day"
-            }
+          "comment": {
+            "name": "Comment"
           },
           "expires": {
             "name": "Expiration",
@@ -326,142 +491,194 @@
               "permanent": "Permanent"
             }
           },
-          "rule_id": { "name": "Rule ID" }
-        }
-      }
-    },
-    "device_tracker": {
-      "ikuai_tracker": {
-        "name": "Terminal Tracker",
-        "state_attributes": {
-          "mac_address": { "name": "MAC Address" },
-          "ip_address": { "name": "IP Address" },
-          "ap_mac": { "name": "AP MAC Address" },
-          "uplink_addr": { "name": "Uplink Address" }
+          "mac_address": {
+            "name": "MAC Address"
+          },
+          "rule_id": {
+            "name": "Rule ID"
+          },
+          "schedule": {
+            "name": "Effective Time",
+            "state": {
+              "all_day": "All Day",
+              "every_week": "Every Week",
+              "specific_date": "Specific Date"
+            }
+          },
+          "terminal_name": {
+            "name": "Terminal Name"
+          }
         }
       }
     }
   },
+  "options": {
+    "error": {
+      "no_devices_selected": "You did not select any devices.",
+      "no_new_devices_found": "No new online terminals were found."
+    },
+    "step": {
+      "configure_devices": {
+        "data": {
+          "name": "Display Name",
+          "offline_grace_period": "Offline Grace Period (minutes)"
+        },
+        "description": "Configuring **{device}**. Please set a display name and offline grace period.\nRemaining devices: {remaining}.\nTip: Mobile devices typically require ~10 minutes.",
+        "title": "Configure Terminal Tracking Options"
+      },
+      "init": {
+        "data": {
+          "manage_action": "Terminal Tracking Management",
+          "offline_grace_period": "Global Offline Grace Period (minutes)",
+          "scan_interval": "Data Update Interval (seconds)"
+        },
+        "title": "iKuai Connect Options"
+      },
+      "remove": {
+        "data": {
+          "devices_to_remove": "Tracked Terminal List"
+        },
+        "description": "Select the terminals you no longer want to track. Their entities will be removed.",
+        "title": "Remove Tracked Terminals"
+      },
+      "scan": {
+        "data": {
+          "devices": "Terminal List (Online + Offline)"
+        },
+        "description": "Please select the terminals you want Home Assistant to track. The list includes both currently online and recently offline devices; a tracked offline device shows as not_home until it reconnects.",
+        "title": "Select Terminals to Track"
+      }
+    }
+  },
+  "selector": {
+    "manage_action": {
+      "options": {
+        "add": "Add New Terminals",
+        "none": "None (Save basic settings and exit)",
+        "remove": "Remove Existing Terminals"
+      }
+    }
+  },
   "services": {
-    "reboot": {
-      "name": "Reboot Router",
-      "description": "The reboot command has been issued. iKuai will perform the reboot within 1 minute."
-    },
-    "check_upgrade": {
-      "name": "Check for Updates",
-      "description": "Checking for new versions from the cloud. Please check the system logs shortly."
-    },
-    "start_upgrade": {
-      "name": "Firmware Upgrade",
-      "description": "The system upgrade command has been triggered. Do not power off or reboot the device."
-    },
-    "backup": {
-      "name": "System Backup",
-      "description": "The system backup task has started. Please check the backup files in the background later."
-    },
-    "get_traffic_ranking": {
-      "name": "Get Today's Traffic Ranking",
-      "description": "Retrieve today's total traffic usage for all terminals, measured in MB.",
-      "fields": {
-        "device_id": {
-          "name": "Target Device",
-          "description": "Select the router device to query. Only needed when multiple routers are configured."
-        }
-      }
-    },
-    "get_protocol_stats": {
-      "name": "Get Protocol Distribution",
-      "description": "Retrieve protocol-based traffic statistics for the specified terminal over the last 24 hours (e.g., to determine whether the device was streaming video or downloading files).",
-      "fields": {
-        "device_id": {
-          "name": "Target Device",
-          "description": "Select the router device to query. Only needed when multiple routers are configured."
-        },
-        "mac": {
-          "name": "MAC Address",
-          "description": "The terminal's MAC address."
-        },
-        "ip": {
-          "name": "IP Address",
-          "description": "The terminal's IP address (optional; if omitted, the system will attempt to match automatically from cache)."
-        }
-      }
-    },
-    "get_offline_history": {
-      "name": "Get Offline Terminal History",
-      "description": "Retrieve the latest 20 offline records for terminals, measured in MB.",
-      "fields": {
-        "device_id": {
-          "name": "Target Device",
-          "description": "Select the router device to query. Only needed when multiple routers are configured."
-        }
-      }
-    },
     "add_mac_rule": {
-      "name": "Add MAC Access Control Rule",
       "description": "Create a new MAC whitelist/blacklist rule in iKuai. After creation, the integration will automatically generate the corresponding switch entity.",
       "fields": {
         "device_id": {
-          "name": "Target Device",
-          "description": "Select the router device to operate. Only needed when multiple routers are configured."
-        },
-        "mac": {
-          "name": "MAC Address",
-          "description": "The physical MAC address of the terminal."
-        },
-        "tagname": {
-          "name": "Rule Name",
-          "description": "The name displayed in the iKuai backend and Home Assistant."
+          "description": "Select the router device to operate. Only needed when multiple routers are configured.",
+          "name": "Target Device"
         },
         "expires": {
-          "name": "Expiration Timestamp",
-          "description": "Unix timestamp. The rule will automatically expire at this time. 0 means it never expires."
-        }
-      }
-    },
-    "delete_mac_rule": {
-      "name": "Delete MAC Access Control Rule",
-      "description": "Completely remove the specified MAC filtering rule. The corresponding Home Assistant switch entity will be automatically removed.",
-      "fields": {
-        "device_id": {
-          "name": "Target Device",
-          "description": "Select the router device to operate. Only needed when multiple routers are configured."
+          "description": "Unix timestamp. The rule will automatically expire at this time. 0 means it never expires.",
+          "name": "Expiration Timestamp"
         },
-        "rule_id": {
-          "name": "Rule ID",
-          "description": "The unique numeric ID of the rule (visible in the entity attributes)."
+        "mac": {
+          "description": "The physical MAC address of the terminal.",
+          "name": "MAC Address"
+        },
+        "tagname": {
+          "description": "The name displayed in the iKuai backend and Home Assistant.",
+          "name": "Rule Name"
         }
-      }
+      },
+      "name": "Add MAC Access Control Rule"
+    },
+    "backup": {
+      "description": "The system backup task has started. Please check the backup files in the background later.",
+      "name": "System Backup"
     },
     "call_api_service": {
-      "name": "Custom API Call",
       "description": "Generic caller for any iKuai OpenAPI endpoint, used to fetch data not yet natively integrated or to perform actions.",
       "fields": {
         "device_id": {
-          "name": "Target Device",
-          "description": "Select the router device to operate. Only needed when multiple routers are configured."
-        },
-        "path": {
-          "name": "API Path",
-          "description": "Endpoint path starting with /api/, e.g. /api/v4.0/monitoring/clients-online"
+          "description": "Select the router device to operate. Only needed when multiple routers are configured.",
+          "name": "Target Device"
         },
         "method": {
-          "name": "HTTP Method",
-          "description": "HTTP request method (dropdown). GET fetches data with params appended to the URL query string; POST/PUT/DELETE submit data or perform actions with params sent as the request body. Defaults to GET."
+          "description": "HTTP request method (dropdown). GET fetches data with params appended to the URL query string; POST/PUT/DELETE submit data or perform actions with params sent as the request body. Defaults to GET.",
+          "name": "HTTP Method"
         },
         "params": {
-          "name": "Request Params (JSON)",
-          "description": "Parameters as JSON. For GET they are appended to the query string; for POST/PUT/DELETE they are sent as the request body."
+          "description": "Parameters as JSON. For GET they are appended to the query string; for POST/PUT/DELETE they are sent as the request body.",
+          "name": "Request Params (JSON)"
         },
-        "timeout": {
-          "name": "Timeout (seconds)",
-          "description": "Request timeout in seconds. Defaults to 15, maximum 120."
+        "path": {
+          "description": "Endpoint path starting with /api/, e.g. /api/v4.0/monitoring/clients-online",
+          "name": "API Path"
         },
         "return_raw": {
-          "name": "Return Raw Response",
-          "description": "When enabled, the data field contains the full response including code/message/results; when disabled, only the business data (results) is returned."
+          "description": "When enabled, the data field contains the full response including code/message/results; when disabled, only the business data (results) is returned.",
+          "name": "Return Raw Response"
+        },
+        "timeout": {
+          "description": "Request timeout in seconds. Defaults to 15, maximum 120.",
+          "name": "Timeout (seconds)"
         }
-      }
+      },
+      "name": "Custom API Call"
+    },
+    "check_upgrade": {
+      "description": "Checking for new versions from the cloud. Please check the system logs shortly.",
+      "name": "Check for Updates"
+    },
+    "delete_mac_rule": {
+      "description": "Completely remove the specified MAC filtering rule. The corresponding Home Assistant switch entity will be automatically removed.",
+      "fields": {
+        "device_id": {
+          "description": "Select the router device to operate. Only needed when multiple routers are configured.",
+          "name": "Target Device"
+        },
+        "rule_id": {
+          "description": "The unique numeric ID of the rule (visible in the entity attributes).",
+          "name": "Rule ID"
+        }
+      },
+      "name": "Delete MAC Access Control Rule"
+    },
+    "get_offline_history": {
+      "description": "Retrieve the latest 20 offline records for terminals, measured in MB.",
+      "fields": {
+        "device_id": {
+          "description": "Select the router device to query. Only needed when multiple routers are configured.",
+          "name": "Target Device"
+        }
+      },
+      "name": "Get Offline Terminal History"
+    },
+    "get_protocol_stats": {
+      "description": "Retrieve protocol-based traffic statistics for the specified terminal over the last 24 hours (e.g., to determine whether the device was streaming video or downloading files).",
+      "fields": {
+        "device_id": {
+          "description": "Select the router device to query. Only needed when multiple routers are configured.",
+          "name": "Target Device"
+        },
+        "ip": {
+          "description": "The terminal's IP address (optional; if omitted, the system will attempt to match automatically from cache).",
+          "name": "IP Address"
+        },
+        "mac": {
+          "description": "The terminal's MAC address.",
+          "name": "MAC Address"
+        }
+      },
+      "name": "Get Protocol Distribution"
+    },
+    "get_traffic_ranking": {
+      "description": "Retrieve today's total traffic usage for all terminals, measured in MB.",
+      "fields": {
+        "device_id": {
+          "description": "Select the router device to query. Only needed when multiple routers are configured.",
+          "name": "Target Device"
+        }
+      },
+      "name": "Get Today's Traffic Ranking"
+    },
+    "reboot": {
+      "description": "The reboot command has been issued. iKuai will perform the reboot within 1 minute.",
+      "name": "Reboot Router"
+    },
+    "start_upgrade": {
+      "description": "The system upgrade command has been triggered. Do not power off or reboot the device.",
+      "name": "Firmware Upgrade"
     }
   }
 }
