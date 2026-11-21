@@ -2,9 +2,9 @@ name: 从 Dependabot 同步标签
 
 on:
   push:
-    branches: ['**']
+    branches: ["**"]
     paths:
-      - '.github/dependabot.yml'
+      - ".github/dependabot.yml"
   workflow_dispatch:
 
 permissions:

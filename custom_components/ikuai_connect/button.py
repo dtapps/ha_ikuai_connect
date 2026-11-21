@@ -1,11 +1,16 @@
 """iKuai Connect 按钮传感器平台."""
+
 from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
 from typing import Final
 
-from homeassistant.components.button import ButtonDeviceClass, ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
@@ -15,10 +20,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, LOGGER
 from .coordinator import IkuaiCoordinator
 
+
 @dataclass(frozen=True, kw_only=True)
 class IkuaiButtonEntityDescription(ButtonEntityDescription):
     """描述按钮动作."""
-    action_type: str 
+
+    action_type: str
+
 
 # 按钮实体定义
 BUTTON_TYPES: Final[tuple[IkuaiButtonEntityDescription, ...]] = (
@@ -54,6 +62,7 @@ BUTTON_TYPES: Final[tuple[IkuaiButtonEntityDescription, ...]] = (
     ),
 )
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -64,9 +73,9 @@ async def async_setup_entry(
 
     # 使用描述符批量注册
     async_add_entities(
-        IkuaiButton(coordinator, description)
-        for description in BUTTON_TYPES
+        IkuaiButton(coordinator, description) for description in BUTTON_TYPES
     )
+
 
 class IkuaiButton(CoordinatorEntity[IkuaiCoordinator], ButtonEntity):
     """iKuai 统一按钮实现 (支持主设备与维护子设备)."""
@@ -75,9 +84,7 @@ class IkuaiButton(CoordinatorEntity[IkuaiCoordinator], ButtonEntity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, 
-        coordinator: IkuaiCoordinator, 
-        description: IkuaiButtonEntityDescription
+        self, coordinator: IkuaiCoordinator, description: IkuaiButtonEntityDescription
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -127,7 +134,7 @@ class IkuaiButton(CoordinatorEntity[IkuaiCoordinator], ButtonEntity):
         translations = await translation.async_get_translations(
             self.hass, lang, "services", [DOMAIN]
         )
-        
+
         msg_key = f"component.{DOMAIN}.services.{action}.description"
         message = translations.get(msg_key, f"Action {action} completed.")
 
@@ -139,5 +146,5 @@ class IkuaiButton(CoordinatorEntity[IkuaiCoordinator], ButtonEntity):
                 "message": message,
                 "notification_id": f"ikuai_{action}",
             },
-            blocking=False
+            blocking=False,
         )

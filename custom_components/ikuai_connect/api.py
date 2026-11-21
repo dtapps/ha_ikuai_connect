@@ -1,4 +1,5 @@
 """iKuai OpenAPI 异步客户端."""
+
 from __future__ import annotations
 
 import asyncio
@@ -17,30 +18,31 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 # 定义缓存时长（秒）
 CACHE_TTL = {
     # 主设备核心监控类
-    "/api/v4.0/monitoring/system": 0,               # 系统负载：实时
-    "/api/v4.0/monitoring/clients-online?limit=500": 15,       # 终端列表：15秒（拉全在线终端，避免分页丢设备）
+    "/api/v4.0/monitoring/system": 0,  # 系统负载：实时
+    "/api/v4.0/monitoring/clients-online?limit=500": 15,  # 终端列表：15秒（拉全在线终端，避免分页丢设备）
     "/api/v4.0/monitoring/wireless-statistics": 30,  # 无线统计：30秒
-    "/api/v4.0/monitoring/interfaces-traffic-v6": 15, # IPv6流量：15秒    
-    "/api/v4.0/monitoring/wireless-score": 60,       # 无线评分：1分钟
+    "/api/v4.0/monitoring/interfaces-traffic-v6": 15,  # IPv6流量：15秒
+    "/api/v4.0/monitoring/wireless-score": 60,  # 无线评分：1分钟
     # 接口管理类
-    "/api/v4.0/monitoring/interfaces-status": 30,     # 线路状态：30秒
+    "/api/v4.0/monitoring/interfaces-status": 30,  # 线路状态：30秒
     "/api/v4.0/monitoring/interfaces-config": 3600,  # 线路配置：1小时
     # 日志与事件类
-    "/api/v4.0/log/message-center?limit=10&order=desc&order_by=id": 60,      # 消息中心：1分钟（按 id 降序；增量由 coordinator 按内容签名去重）
-    "/api/v4.0/log/terminal-presence?limit=10&order=desc&order_by=id": 0,   # 上下线日志：实时
-    "/api/v4.0/log/ddns?limit=10&order=desc&order_by=id": 60,   # DDNS日志：1分钟
-    "/api/v4.0/log/wireless?limit=10&order=desc&order_by=id": 0,   # 无线日志：实时
-    "/api/v4.0/log/system?limit=10&order=desc&order_by=id": 60,     # 系统日志：1分钟（条目含 id，增量由 coordinator 以 id 游标处理）
+    "/api/v4.0/log/message-center?limit=10&order=desc&order_by=id": 60,  # 消息中心：1分钟（按 id 降序；增量由 coordinator 按内容签名去重）
+    "/api/v4.0/log/terminal-presence?limit=10&order=desc&order_by=id": 0,  # 上下线日志：实时
+    "/api/v4.0/log/ddns?limit=10&order=desc&order_by=id": 60,  # DDNS日志：1分钟
+    "/api/v4.0/log/wireless?limit=10&order=desc&order_by=id": 0,  # 无线日志：实时
+    "/api/v4.0/log/system?limit=10&order=desc&order_by=id": 60,  # 系统日志：1分钟（条目含 id，增量由 coordinator 以 id 游标处理）
     # 安全管理类
-    "/api/v4.0/security/mac-mode": 60,               # MAC模式：1分钟
-    "/api/v4.0/security/mac-rules?limit=100": 60,    # MAC规则：1分钟
+    "/api/v4.0/security/mac-mode": 60,  # MAC模式：1分钟
+    "/api/v4.0/security/mac-rules?limit=100": 60,  # MAC规则：1分钟
     # 升级与备份类
-    "/api/v4.0/system/backup": 3600,                  # 备份列表：1小时
-    "/api/v4.0/system/upgrade": 3600,                # 固件信息：1小时
-    "/api/v4.0/system/upgrade:status": 0,            # 升级进度：实时
+    "/api/v4.0/system/backup": 3600,  # 备份列表：1小时
+    "/api/v4.0/system/upgrade": 3600,  # 固件信息：1小时
+    "/api/v4.0/system/upgrade:status": 0,  # 升级进度：实时
     # 存储磁盘类
-    "/api/v4.0/system/disks": 3600,                  # 磁盘信息：1小时
+    "/api/v4.0/system/disks": 3600,  # 磁盘信息：1小时
 }
+
 
 class IkuaiAPI:
     """iKuai OpenAPI 异步客户端."""
@@ -51,9 +53,15 @@ class IkuaiAPI:
         self._session: ClientSession = async_get_clientsession(hass)
         self._semaphore = asyncio.Semaphore(3)
         self._cache: dict[str, tuple[float, Any]] = {}
-        self._failed_until: dict[str, float] = {} # 负面缓存
+        self._failed_until: dict[str, float] = {}  # 负面缓存
 
-    async def _make_request(self, method: str, endpoint: str, json_data: dict | None = None, retry: bool = True) -> dict[str, Any]:
+    async def _make_request(
+        self,
+        method: str,
+        endpoint: str,
+        json_data: dict | None = None,
+        retry: bool = True,
+    ) -> dict[str, Any]:
         """统一请求封装。"""
         now = time.time()
         if self._failed_until.get(endpoint, 0) > now:
@@ -67,43 +75,59 @@ class IkuaiAPI:
         headers = {
             "Authorization": f"Bearer {self.token}",
             "Accept": "application/json",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
-        
+
         async with self._semaphore:
             try:
                 # 将请求超时放宽到 15s，防止排队导致的超时
                 async with asyncio.timeout(15):
-                    async with self._session.request(method, f"{self.host}{endpoint}", headers=headers, json=json_data, ssl=False) as response:
+                    async with self._session.request(
+                        method,
+                        f"{self.host}{endpoint}",
+                        headers=headers,
+                        json=json_data,
+                        ssl=False,
+                    ) as response:
                         if response.status == 404:
                             self._failed_until[endpoint] = now + 600
                             return {}
-                        
+
                         if response.status >= 500 and retry:
                             await asyncio.sleep(0.5)
                             # 重试时不应再次经过 semaphore 锁，直接发起调用以防止死锁
-                            return await self._make_request_raw(method, endpoint, json_data)
+                            return await self._make_request_raw(
+                                method, endpoint, json_data
+                            )
 
                         response.raise_for_status()
                         raw_text = await response.text()
                         if '"data":timeout' in raw_text:
                             raw_text = raw_text.replace('"data":timeout', '"data":[]')
-                        
+
                         data = json.loads(raw_text, strict=False)
                         results = data.get("results", {})
-                        
+
                         if method == "GET" and CACHE_TTL.get(endpoint, 0) > 0:
                             self._cache[endpoint] = (now, results)
                         return results
             except Exception as err:
                 LOGGER.debug("API 请求异常 %s: %s", endpoint, err)
-                if endpoint in self._cache: return self._cache[endpoint][1]
+                if endpoint in self._cache:
+                    return self._cache[endpoint][1]
                 raise
 
-    async def _make_request_raw(self, method: str, endpoint: str, json_data: dict | None = None) -> dict[str, Any]:
+    async def _make_request_raw(
+        self, method: str, endpoint: str, json_data: dict | None = None
+    ) -> dict[str, Any]:
         """供重试使用的无锁原始请求方法."""
-        headers = {"Authorization": f"Bearer {self.token}", "Content-Type": "application/json"}
-        async with self._session.request(method, f"{self.host}{endpoint}", headers=headers, json=json_data, ssl=False) as response:
+        headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json",
+        }
+        async with self._session.request(
+            method, f"{self.host}{endpoint}", headers=headers, json=json_data, ssl=False
+        ) as response:
             response.raise_for_status()
             text = await response.text()
             data = json.loads(text.replace('"data":timeout', '"data":[]'), strict=False)
@@ -192,11 +216,15 @@ class IkuaiAPI:
         返回字段说明:
         - data: [ {mac, ip_addr, upload, download, total_up, total_down, termname, comment, client_vendor, interface} ]
         """
-        return await self._make_request("GET", "/api/v4.0/monitoring/clients-online?limit=500")
+        return await self._make_request(
+            "GET", "/api/v4.0/monitoring/clients-online?limit=500"
+        )
 
     async def get_wifi_stats(self) -> dict[str, Any]:
         """获取无线AP统计 (/api/v4.0/monitoring/wireless-statistics)"""
-        return await self._make_request("GET", "/api/v4.0/monitoring/wireless-statistics")
+        return await self._make_request(
+            "GET", "/api/v4.0/monitoring/wireless-statistics"
+        )
 
     async def get_wifi_score(self) -> dict[str, Any]:
         """获取无线网络评分 (/api/v4.0/monitoring/wireless-score)"""
@@ -204,7 +232,9 @@ class IkuaiAPI:
 
     async def get_v6_traffic(self) -> dict[str, Any]:
         """获取IPv6线路详情 (/api/v4.0/monitoring/interfaces-traffic-v6)"""
-        return await self._make_request("GET", "/api/v4.0/monitoring/interfaces-traffic-v6")
+        return await self._make_request(
+            "GET", "/api/v4.0/monitoring/interfaces-traffic-v6"
+        )
 
     # --- 接口与流量类 (Network Interfaces) ---
     async def get_iface_status(self) -> dict[str, Any]:
@@ -232,8 +262,10 @@ class IkuaiAPI:
 
     async def get_presence_logs(self) -> dict[str, Any]:
         """获取终端上下线日志 (/api/v4.0/log/terminal-presence)"""
-        params = "limit=10&order=desc&order_by=id"     
-        return await self._make_request("GET", f"/api/v4.0/log/terminal-presence?{params}")
+        params = "limit=10&order=desc&order_by=id"
+        return await self._make_request(
+            "GET", f"/api/v4.0/log/terminal-presence?{params}"
+        )
 
     async def get_ddns_logs(self) -> dict[str, Any]:
         """获取动态域名日志 (GET /api/v4.0/log/ddns)."""
@@ -291,7 +323,9 @@ class IkuaiAPI:
         获取终端当日流量统计排行 (/api/v4.0/monitoring/clients-traffic-summary)
         用于服务 ikuai_connect.get_traffic_ranking
         """
-        return await self._make_request("GET", "/api/v4.0/monitoring/clients-traffic-summary?limit=100")
+        return await self._make_request(
+            "GET", "/api/v4.0/monitoring/clients-traffic-summary?limit=100"
+        )
 
     async def get_client_protocol_stats(self, mac: str, ip: str) -> dict[str, Any]:
         """获取指定终端的协议分类流量统计 (/api/v4.0/monitoring/clients/protocols)"""
@@ -325,39 +359,52 @@ class IkuaiAPI:
 
     async def start_upgrade(self) -> bool:
         """立即升级 (POST)"""
-        return await self._make_request("POST", "/api/v4.0/system/upgrade:start", json_data={"type": "system"})
+        return await self._make_request(
+            "POST", "/api/v4.0/system/upgrade:start", json_data={"type": "system"}
+        )
 
     async def trigger_immediate_reboot(self) -> bool:
         """创建一次性计划实现1分钟内重启."""
- 
+
         tz = ZoneInfo("Asia/Shanghai")
         now = datetime.now(tz)
         reboot_time = now + timedelta(minutes=1)
         payload = {
-            "enabled": "yes", "event": "reboot", "strategy": "one",
+            "enabled": "yes",
+            "event": "reboot",
+            "strategy": "one",
             "cycle_time": reboot_time.strftime("%Y-%m-%d"),
             "time": reboot_time.strftime("%H:%M"),
-            "tagname": "HA_Reboot", "comment": "Reboot"
+            "tagname": "HA_Reboot",
+            "comment": "Reboot",
         }
-        await self._make_request("POST", "/api/v4.0/system/reboot-schedules", json_data=payload)
+        await self._make_request(
+            "POST", "/api/v4.0/system/reboot-schedules", json_data=payload
+        )
         return True
 
     async def set_mac_mode(self, mode_code: int) -> bool:
         """设置黑白名单模式 (PUT)"""
-        await self._make_request("PUT", "/api/v4.0/security/mac-mode", json_data={"acl_mac": mode_code})
+        await self._make_request(
+            "PUT", "/api/v4.0/security/mac-mode", json_data={"acl_mac": mode_code}
+        )
         self._cache.pop("/api/v4.0/security/mac-mode", None)
         return True
 
     async def toggle_mac_rule(self, rule_id: int, enabled: bool) -> bool:
         """开关指定MAC规则 (PATCH)"""
         payload = {"enabled": "yes" if enabled else "no"}
-        await self._make_request("PATCH", f"/api/v4.0/security/mac-rules/{rule_id}", json_data=payload)
+        await self._make_request(
+            "PATCH", f"/api/v4.0/security/mac-rules/{rule_id}", json_data=payload
+        )
         self._cache.pop("/api/v4.0/security/mac-rules?limit=100", None)
         return True
 
     async def add_mac_rule(self, payload: dict[str, Any]) -> dict[str, Any]:
         """创建MAC规则 (POST)"""
-        res = await self._make_request("POST", "/api/v4.0/security/mac-rules", json_data=payload)
+        res = await self._make_request(
+            "POST", "/api/v4.0/security/mac-rules", json_data=payload
+        )
         self._cache.pop("/api/v4.0/security/mac-rules?limit=100", None)
         return res
 
@@ -370,37 +417,40 @@ class IkuaiAPI:
     # --- 核心调度器：分级错峰获取 ---
     async def get_all_data(self, include_clients: bool = True) -> list[Any]:
         """分批并发获取。"""
-        async def _get_empty(): return {"data": []}
+
+        async def _get_empty():
+            return {"data": []}
+
         # 批次 1：核心监控类 (3个并发)
         batch_1 = await asyncio.gather(
-            self.get_system_info(),                          # 1 系统负载
-            self.get_lan_devices(),                          # 2 终端列表
-            self.get_wifi_stats(),                           # 3 无线统计
-            self.get_wifi_score(),                           # 4 无线评分
-            self.get_v6_traffic(),                           # 5 IPv6流量       
-            return_exceptions=True
+            self.get_system_info(),  # 1 系统负载
+            self.get_lan_devices(),  # 2 终端列表
+            self.get_wifi_stats(),  # 3 无线统计
+            self.get_wifi_score(),  # 4 无线评分
+            self.get_v6_traffic(),  # 5 IPv6流量
+            return_exceptions=True,
         )
 
         # 批次 2：日志与事件 (3个并发)
         batch_2 = await asyncio.gather(
-            self.get_iface_status(),                         # 6 线路状态
-            self.get_message_center(),                       # 7 消息中心
-            self.get_presence_logs(),                     # 8 上下线日志
-            self.get_ddns_logs(),                            # 9 DDNS日志       
-            self.get_wireless_logs(),                        # 10 无线日志
-            self.get_system_logs(),                          # 11 系统日志 
-            return_exceptions=True
+            self.get_iface_status(),  # 6 线路状态
+            self.get_message_center(),  # 7 消息中心
+            self.get_presence_logs(),  # 8 上下线日志
+            self.get_ddns_logs(),  # 9 DDNS日志
+            self.get_wireless_logs(),  # 10 无线日志
+            self.get_system_logs(),  # 11 系统日志
+            return_exceptions=True,
         )
 
         # 批次 3：安全与维护 (3个并发)
-        batch_3 = await asyncio.gather(                                                                                           # 7
-            self.get_mac_mode(),                              # 12 MAC模式
-            self.get_mac_rules(),                             # 13 MAC规则
-            self.get_backup_list(),                           # 14 备份列表
-            self.get_upgrade_info(),                          # 15 升级信息
-            self.get_upgrade_status(),                        # 16 升级状态
-            self.get_disks(),                                 # 17 磁盘信息
-            return_exceptions=True
+        batch_3 = await asyncio.gather(  # 7
+            self.get_mac_mode(),  # 12 MAC模式
+            self.get_mac_rules(),  # 13 MAC规则
+            self.get_backup_list(),  # 14 备份列表
+            self.get_upgrade_info(),  # 15 升级信息
+            self.get_upgrade_status(),  # 16 升级状态
+            self.get_disks(),  # 17 磁盘信息
+            return_exceptions=True,
         )
 
         # 完美拼装 0-16 顺序

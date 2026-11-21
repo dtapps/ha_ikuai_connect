@@ -1,7 +1,9 @@
 {
   "domain": "ikuai_connect",
   "name": "iKuai Connect",
-  "codeowners": ["@dtapps"],
+  "codeowners": [
+    "@dtapps"
+  ],
   "config_flow": true,
   "documentation": "https://github.com/dtapps/ha_ikuai_connect",
   "integration_type": "device",

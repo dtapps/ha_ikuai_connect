@@ -1,4 +1,5 @@
 """iKuai Connect 开关传感器平台"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -13,6 +14,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import IkuaiCoordinator
 from .helpers import decode_term_name
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -42,6 +44,7 @@ async def async_setup_entry(
     _async_manage_entities()
     entry.async_on_unload(coordinator.async_add_listener(_async_manage_entities))
 
+
 class IkuaiMacRuleSwitch(CoordinatorEntity[IkuaiCoordinator], SwitchEntity):
     """动态 MAC 规则开关类."""
 
@@ -59,16 +62,18 @@ class IkuaiMacRuleSwitch(CoordinatorEntity[IkuaiCoordinator], SwitchEntity):
             "every_week": "Every {weekdays}",
             "specific_date": "Specific Date",
             "all_day": "All Day",
-            "permanent": "Permanent"
+            "permanent": "Permanent",
         }
 
     async def async_added_to_hass(self) -> None:
         """当实体被添加至系统时加载本地化语言."""
         await super().async_added_to_hass()
-        
+
         lang = self.hass.config.language
-        translations = await translation.async_get_translations(self.hass, lang, "entity", [DOMAIN])
-        
+        translations = await translation.async_get_translations(
+            self.hass, lang, "entity", [DOMAIN]
+        )
+
         base_path = f"component.{DOMAIN}.entity.switch.mac_rule.state_attributes"
         mapping = {
             "every_week": f"{base_path}.schedule.state.every_week",
@@ -76,7 +81,7 @@ class IkuaiMacRuleSwitch(CoordinatorEntity[IkuaiCoordinator], SwitchEntity):
             "all_day": f"{base_path}.schedule.state.all_day",
             "permanent": f"{base_path}.expires.state.permanent",
         }
-        
+
         for key, path in mapping.items():
             if path in translations:
                 self._labels[key] = translations[path]
@@ -92,13 +97,21 @@ class IkuaiMacRuleSwitch(CoordinatorEntity[IkuaiCoordinator], SwitchEntity):
     @property
     def name(self) -> str | None:
         """从数据中获取规则名称 (tagname)."""
-        rule = self.coordinator.data.get("security", {}).get("mac_rules", {}).get(self._rule_id, {})
+        rule = (
+            self.coordinator.data.get("security", {})
+            .get("mac_rules", {})
+            .get(self._rule_id, {})
+        )
         return rule.get("tagname")
 
     @property
     def is_on(self) -> bool:
         """获取当前规则状态."""
-        rule = self.coordinator.data.get("security", {}).get("mac_rules", {}).get(self._rule_id, {})
+        rule = (
+            self.coordinator.data.get("security", {})
+            .get("mac_rules", {})
+            .get(self._rule_id, {})
+        )
         return rule.get("enabled") == "yes"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -114,7 +127,11 @@ class IkuaiMacRuleSwitch(CoordinatorEntity[IkuaiCoordinator], SwitchEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """返回详细属性."""
-        rule = self.coordinator.data.get("security", {}).get("mac_rules", {}).get(self._rule_id, {})
+        rule = (
+            self.coordinator.data.get("security", {})
+            .get("mac_rules", {})
+            .get(self._rule_id, {})
+        )
         if not rule:
             return {}
 
@@ -128,7 +145,9 @@ class IkuaiMacRuleSwitch(CoordinatorEntity[IkuaiCoordinator], SwitchEntity):
                 formatted_times.append(f"{prefix}{t.get('weekdays')}")
             else:
                 prefix = self._labels.get("specific_date", "Date")
-                formatted_times.append(f"{prefix} {t.get('start_time')}-{t.get('end_time')}")
+                formatted_times.append(
+                    f"{prefix} {t.get('start_time')}-{t.get('end_time')}"
+                )
 
         # 处理过期时间
         expires_val = rule.get("expires", 0)
@@ -138,7 +157,9 @@ class IkuaiMacRuleSwitch(CoordinatorEntity[IkuaiCoordinator], SwitchEntity):
             "mac_address": rule.get("mac"),
             "terminal_name": decode_term_name(rule.get("termname")),
             "comment": rule.get("comment"),
-            "schedule": "; ".join(formatted_times) if formatted_times else self._labels["all_day"],
+            "schedule": "; ".join(formatted_times)
+            if formatted_times
+            else self._labels["all_day"],
             "expires": expires_label,
-            "rule_id": self._rule_id
+            "rule_id": self._rule_id,
         }

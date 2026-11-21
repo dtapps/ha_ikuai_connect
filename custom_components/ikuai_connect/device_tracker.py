@@ -1,4 +1,5 @@
 """iKuai Connect 设备追踪平台."""
+
 from __future__ import annotations
 
 from homeassistant.components.device_tracker import BaseScannerEntity, SourceType
@@ -11,6 +12,7 @@ from .const import CONF_TRACKER_CONFIG
 from .coordinator import IkuaiCoordinator
 from .helpers import normalize_mac
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -18,7 +20,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up iKuai trackers."""
     coordinator: IkuaiCoordinator = entry.runtime_data
-    tracker_config = entry.options.get(CONF_TRACKER_CONFIG) or entry.data.get(CONF_TRACKER_CONFIG, {})
+    tracker_config = entry.options.get(CONF_TRACKER_CONFIG) or entry.data.get(
+        CONF_TRACKER_CONFIG, {}
+    )
 
     # 纯增量：删除只在选项流 remove 步骤内事件驱动执行，此处不清理也不监听协调器。
     new_entities = []
@@ -29,13 +33,16 @@ async def async_setup_entry(
 
     async_add_entities(new_entities, True)
 
+
 class IkuaiTracker(CoordinatorEntity[IkuaiCoordinator], BaseScannerEntity):
     """iKuai 终端追踪实体（连接型：state 由 is_connected 推导 home/not_home）."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "ikuai_tracker" 
+    _attr_translation_key = "ikuai_tracker"
 
-    def __init__(self, coordinator: IkuaiCoordinator, mac: str, config: dict, uid: str) -> None:
+    def __init__(
+        self, coordinator: IkuaiCoordinator, mac: str, config: dict, uid: str
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self._mac = normalize_mac(mac)
@@ -60,7 +67,7 @@ class IkuaiTracker(CoordinatorEntity[IkuaiCoordinator], BaseScannerEntity):
         """返回精简后的物理属性."""
         if not self.coordinator.data:
             return {}
-        
+
         client = self.coordinator.data.get("clients", {}).get(self._mac, {})
         if not client:
             return {"mac_address": self._mac}

@@ -1,4 +1,5 @@
 """ikuai connect 集成入口."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,6 +14,7 @@ from .services import async_setup_services, async_unload_services
 
 type IkuaiConfigEntry = ConfigEntry[IkuaiCoordinator]
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: IkuaiConfigEntry) -> bool:
     """设置集成入口."""
     # 实例 API
@@ -22,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IkuaiConfigEntry) -> boo
         hass,
         api,
         entry.data[CONF_HOST],
-        entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
     )
     coordinator.config_entry = entry
 
@@ -31,10 +33,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: IkuaiConfigEntry) -> boo
     entry.runtime_data = coordinator
 
     # 父设备必须先于子设备注册：ChildDeviceInfo 的 parent_device_id 是运行时 id
-    coordinator.parent_device_id = dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, coordinator.host)},
-    ).id
+    coordinator.parent_device_id = (
+        dr.async_get(hass)
+        .async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, coordinator.host)},
+        )
+        .id
+    )
 
     # 注册集成级服务（单例，仅注册一次）
     await async_setup_services(hass)
@@ -43,11 +49,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: IkuaiConfigEntry) -> boo
     # 选项流为 OptionsFlowWithReload，流结束自动 reload，不可再注册 update_listener。
     return True
 
+
 async def async_unload_entry(hass: HomeAssistant, entry: IkuaiConfigEntry) -> bool:
     """卸载集成."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-
         if not any(
             getattr(other, "runtime_data", None) is not None
             for other in hass.config_entries.async_entries(DOMAIN)
