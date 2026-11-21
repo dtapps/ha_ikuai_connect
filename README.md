@@ -84,3 +84,21 @@
 - **ikuai 4.0.222+**
 
   最低兼容 ikuai 4.0.222 及以上版本。
+
+## Star 走势
+
+<details>
+<summary><b>点击展开查看图表</b></summary>
+
+[![Star 走势](https://api.star-history.com/chart?repos=dtapps/ha_ikuai_connect&type=date&legend=top-left)](https://www.star-history.com/?repos=dtapps%2Fha_ikuai_connect&type=date&legend=top-left)
+
+</details>
+
+## 下载量统计图
+
+<details>
+<summary><b>点击展开查看图表</b></summary>
+
+[![下载量统计图](https://release-monitor.com/chart/dtapps/ha_ikuai_connect.svg?stable=5)](https://release-monitor.com/#/dtapps/ha_ikuai_connect)
+
+</details>
