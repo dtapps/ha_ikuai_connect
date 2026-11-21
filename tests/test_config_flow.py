@@ -44,7 +44,7 @@ async def test_user_flow_creates_entry(hass, api_stub):
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "家里的路由器"
+    assert result["title"] == "10.10.10.1"  # v1.2.0 起标题为去掉协议前缀的主机地址
     assert result["data"][CONF_HOST] == "https://10.10.10.1"  # 尾斜杠被去掉
     assert result["data"][CONF_TOKEN] == "test-token"
     assert result["data"][CONF_TRACKER_CONFIG] == {}

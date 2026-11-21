@@ -195,10 +195,10 @@ async def test_device_tracker_reports_home(hass, setup_integration):
     assert state.attributes["mac_address"] == payloads.MAC1
 
 
-async def test_device_tracker_entity_removed_when_untracked(
+async def test_device_tracker_entity_kept_when_untracked(
     hass, setup_integration, config_entry
 ):
-    """从选项里删掉终端后，设备追踪实体必须从注册表物理删除。"""
+    """v1.2.0 起追踪实体改为 setup 纯增量添加，不再轮询 diff 删除实体。"""
     await setup_integration()
     entity_id = find_entity_id(
         hass, "device_tracker", f"{payloads.GWID}_track_089b4b017e7c"
@@ -210,4 +210,4 @@ async def test_device_tracker_entity_removed_when_untracked(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id) is None
+    assert hass.states.get(entity_id) is not None

@@ -6,10 +6,12 @@ from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, CONF_TOKEN
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ikuai_connect.const import (
+    CONF_OFFLINE_GRACE_PERIOD,
     CONF_TRACKER_CONFIG,
     DOMAIN,
     PLATFORMS,
@@ -66,18 +68,24 @@ async def test_update_interval_comes_from_options(
 async def test_options_update_triggers_reload(
     hass, setup_integration, config_entry, api_stub
 ):
+    """选项流完成后由 OptionsFlowWithReload 触发重载（上游已移除 update_listener）。"""
     await setup_integration()
     calls_before = api_stub.get_all_data.await_count
 
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={**config_entry.options, CONF_SCAN_INTERVAL: 60},
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_SCAN_INTERVAL: 60,
+            CONF_OFFLINE_GRACE_PERIOD: 3,
+            "manage_action": "none",
+        },
     )
     await hass.async_block_till_done()
 
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.runtime_data.update_interval == timedelta(seconds=60)
-    # 重载 = 重新拉一遍数据
     assert api_stub.get_all_data.await_count > calls_before
 
 

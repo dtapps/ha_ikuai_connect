@@ -93,8 +93,11 @@ class IkuaiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 try:
                     api = IkuaiAPI(self.hass, host, token)
                     await api.get_system_info()
-
-                    # 设置物理唯一 ID (基于 Host 地址)
+                except Exception:  # pylint: disable=broad-except
+                    errors["base"] = "cannot_connect"
+                else:
+                    # 必须在 try 外：_abort_if_unique_id_configured() 抛的是 AbortFlow，
+                    # 被上面的宽泛 except 吞掉会把「已配置」误报成 "cannot_connect"。
                     await self.async_set_unique_id(host.lower())
                     self._abort_if_unique_id_configured()
                     # 条目标题 = 主机地址（去协议前缀，保留端口以区分多实例）；名称落库供主设备名使用
@@ -107,8 +110,6 @@ class IkuaiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             CONF_TRACKER_CONFIG: {},
                         },
                     )
-                except Exception:  # pylint: disable=broad-except
-                    errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",

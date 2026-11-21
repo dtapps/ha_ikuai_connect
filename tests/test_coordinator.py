@@ -493,14 +493,19 @@ async def test_device_info_properties(make_coordinator):
     assert info["identifiers"] == {("ikuai_connect", HOST)}
     assert info["sw_version"] == "4.0.307"
     assert info["hw_version"] == "arm64"
-    assert info["name"].endswith("负载监控")
+    assert info["name"] == "测试路由"  # v1.2.0 起主设备名来自 CONF_NAME
 
-    assert coordinator.iface_mgmt_device_info["via_device"] == (
-        "ikuai_connect",
-        HOST,
+    # v1.2.0 用 ChildDeviceInfo.parent_device_id 取代旧的 via_device
+    assert (
+        coordinator.iface_mgmt_device_info["parent_device_id"]
+        == coordinator.parent_device_id
     )
-    assert coordinator.security_device_info["model"] == "Security & Firewall"
-    assert coordinator.maintenance_device_info["model"] == "System Maintenance"
+    assert coordinator.security_device_info["identifiers"] == {
+        ("ikuai_connect", f"{HOST}_security")
+    }
+    assert coordinator.maintenance_device_info["identifiers"] == {
+        ("ikuai_connect", f"{HOST}_maintenance")
+    }
 
 
 @pytest.mark.asyncio

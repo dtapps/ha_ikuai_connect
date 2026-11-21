@@ -13,7 +13,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SCAN_INTERVAL, CONF_TOKEN
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ikuai_connect import api as api_module_ref
@@ -60,6 +60,7 @@ def config_entry(hass, tracker_options) -> MockConfigEntry:
         data={
             CONF_HOST: payloads.HOST,
             CONF_TOKEN: "test-token",
+            CONF_NAME: "iKuai Connect",
             CONF_TRACKER_CONFIG: {},
         },
         options={CONF_SCAN_INTERVAL: 30, **tracker_options},
@@ -160,7 +161,10 @@ def make_coordinator(hass):
 
         coordinator = IkuaiCoordinator(hass, StubAPI(), host, 15)
         coordinator.config_entry = SimpleNamespace(
-            options=options or {}, title="测试路由", entry_id="entry_test"
+            options=options or {},
+            data={CONF_NAME: "测试路由"},
+            title="测试路由",
+            entry_id="entry_test",
         )
         return coordinator
 
