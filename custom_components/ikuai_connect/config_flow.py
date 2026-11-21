@@ -1,11 +1,12 @@
 """iKuai Connect 配置流实现."""
-
 from __future__ import annotations
 
 import re
+from copy import deepcopy
 from typing import Any
 
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
@@ -15,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -38,7 +40,6 @@ from .const import (
 )
 from .helpers import decode_term_name, extract_name_from_label, normalize_mac
 
-
 class IkuaiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """处理 iKuai Connect 的初次配置和重新配置."""
 
@@ -52,13 +53,10 @@ class IkuaiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             defaults = {}
 
         schema = {}
-
         # 只有在初次安装时显示集成标题
         if not is_reconfigure:
             schema[
-                vol.Required(
-                    CONF_NAME, default=defaults.get(CONF_NAME, "iKuai Connect")
-                )
+                vol.Required(CONF_NAME, default=defaults.get(CONF_NAME, "iKuai Connect"))
             ] = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 
         schema.update(
@@ -66,9 +64,9 @@ class IkuaiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_HOST, default=defaults.get(CONF_HOST, "https://10.10.10.1")
                 ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
-                vol.Required(
-                    CONF_TOKEN, default=defaults.get(CONF_TOKEN)
-                ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+                vol.Required(CONF_TOKEN, default=defaults.get(CONF_TOKEN)): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                ),
             }
         )
         return vol.Schema(schema)
@@ -84,10 +82,10 @@ class IkuaiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             token = user_input[CONF_TOKEN]
             name = user_input[CONF_NAME]
 
-            # 校验名称唯一性，防止 entity_id 冲突出现 _2
+            # 校验名称唯一性，防止主设备名冲突导致 entity_id 出现 _2
             current_entries = self._async_current_entries()
             for entry in current_entries:
-                if entry.title == name:
+                if entry.data.get(CONF_NAME) == name:
                     errors[CONF_NAME] = "name_exists"
                     break
 
@@ -95,23 +93,22 @@ class IkuaiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 try:
                     api = IkuaiAPI(self.hass, host, token)
                     await api.get_system_info()
+
+                    # 设置物理唯一 ID (基于 Host 地址)
+                    await self.async_set_unique_id(host.lower())
+                    self._abort_if_unique_id_configured()
+                    # 条目标题 = 主机地址（去协议前缀，保留端口以区分多实例）；名称落库供主设备名使用
+                    return self.async_create_entry(
+                        title=host.split("//")[-1],
+                        data={
+                            CONF_HOST: host,
+                            CONF_TOKEN: token,
+                            CONF_NAME: name,
+                            CONF_TRACKER_CONFIG: {},
+                        },
+                    )
                 except Exception:  # pylint: disable=broad-except
                     errors["base"] = "cannot_connect"
-
-            if not errors:
-                # 唯一 ID 判定必须留在 try 之外：_abort_if_unique_id_configured()
-                # 抛的是 AbortFlow，被上面的 broad except 吞掉会误报 cannot_connect。
-                await self.async_set_unique_id(host.lower())
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=name,
-                    data={
-                        CONF_HOST: host,
-                        CONF_TOKEN: token,
-                        CONF_TRACKER_CONFIG: {},
-                    },
-                )
 
         return self.async_show_form(
             step_id="user",
@@ -164,23 +161,22 @@ class IkuaiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """获取选项流处理器."""
         return IkuaiOptionsFlowHandler()
 
-
-class IkuaiOptionsFlowHandler(config_entries.OptionsFlow):
+class IkuaiOptionsFlowHandler(config_entries.OptionsFlowWithReload):
     """处理集成选项、终端追踪及高级参数."""
 
     def __init__(self) -> None:
         """Initialize."""
         self._selected_devices: list[str] = []
         self._discovered_map: dict[str, str] = {}
-        self._temp_options: dict[str, Any] = {}
+        self._temp_options: dict[str, Any] | None = None
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """配置主菜单."""
-        # 确保整个生命周期内 _temp_options 始终包含完整的当前配置
-        if not self._temp_options:
-            self._temp_options = dict(self.config_entry.options)
+        # 必须深拷贝：嵌套的 tracker_config 仍与 entry.options 共享引用，就地写会污染。
+        if self._temp_options is None:
+            self._temp_options = deepcopy(dict(self.config_entry.options))
 
         if user_input is not None:
             next_action = user_input.get("manage_action", "none")
@@ -237,7 +233,15 @@ class IkuaiOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """从路由器扫描当前在线终端与近期离线终端."""
         errors: dict[str, str] = {}
-        coordinator = self.config_entry.runtime_data
+
+        # IkuaiAPI（与 async_step_user、async_step_reconfigure 的取源方式一致）。
+        coordinator = getattr(self.config_entry, "runtime_data", None)
+        api: IkuaiAPI | None = getattr(coordinator, "api", None)
+        if api is None:
+            host = self.config_entry.data.get(CONF_HOST)
+            token = self.config_entry.data.get(CONF_TOKEN)
+            if host and token:
+                api = IkuaiAPI(self.hass, host, token)
 
         if user_input is not None:
             self._selected_devices = user_input.get("devices", [])
@@ -259,31 +263,36 @@ class IkuaiOptionsFlowHandler(config_entries.OptionsFlow):
             )
 
         try:
+            if api is None:
+                raise RuntimeError("集成尚未完成加载，且无法从配置条目读取凭据")
             # 1) 在线终端（必选源，失败直接报错）
-            online_res = await coordinator.api.get_lan_devices()
+            online_res = await api.get_lan_devices()
             online_list = online_res.get("data", [])
 
             # 2) 近期离线终端（补充源，失败不阻断扫描，仅回退到在线列表）
             offline_list: list[dict[str, Any]] = []
             try:
-                offline_res = await coordinator.api.get_offline_history(limit=200)
+                offline_res = await api.get_offline_history(limit=200)
                 offline_list = offline_res.get("offline_data", [])
             except Exception as err:  # pylint: disable=broad-except
                 LOGGER.warning("离线终端扫描失败，仅使用在线列表: %s", err)
 
-            # 过滤掉已经在追踪列表中的设备
-            existing_trackers = self._temp_options.get(CONF_TRACKER_CONFIG, {})
+            # 历史脏 key 可能未归一化（大小写/冒号），须归一后比对，否则同设备重复写入。
+            existing_trackers = {
+                normalize_mac(mac)
+                for mac in self._temp_options.get(CONF_TRACKER_CONFIG, {})
+            }
             self._discovered_map = {}
 
-            # 离线先入，在线后入覆盖（在线记录含实时 IP，优先级更高）
-            for item in offline_list:
-                mac = normalize_mac(item.get("mac", ""))
-                if mac and mac not in existing_trackers:
-                    self._discovered_map[mac] = _build_label(item)
+            # 在线优先：先入在线终端（含实时 IP 与流量），近期离线终端作为补充追加在后。
             for item in online_list:
                 mac = normalize_mac(item.get("mac", ""))
                 if mac and mac not in existing_trackers:
                     self._discovered_map[mac] = _build_label(item)
+            for item in offline_list:
+                mac = normalize_mac(item.get("mac", ""))
+                if mac and mac not in existing_trackers:
+                    self._discovered_map.setdefault(mac, _build_label(item))
 
             if not self._discovered_map:
                 errors["base"] = "no_new_devices_found"
@@ -298,17 +307,15 @@ class IkuaiOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="scan",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional("devices"): SelectSelector(
-                        SelectSelectorConfig(
-                            options=device_options,
-                            multiple=True,  # 允许多选
-                            mode=SelectSelectorMode.LIST,
-                        )
+            data_schema=vol.Schema({
+                vol.Optional("devices"): SelectSelector(
+                    SelectSelectorConfig(
+                        options=device_options,
+                        multiple=True, # 允许多选
+                        mode=SelectSelectorMode.LIST,
                     )
-                }
-            ),
+                )
+            }),
             errors=errors,
         )
 
@@ -346,12 +353,11 @@ class IkuaiOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_NAME, default=default_name): str,
-                    vol.Required(CONF_OFFLINE_GRACE_PERIOD, default=10): NumberSelector(
+                    vol.Required(
+                        CONF_OFFLINE_GRACE_PERIOD, default=10
+                    ): NumberSelector(
                         NumberSelectorConfig(
-                            min=1,
-                            max=60,
-                            unit_of_measurement="min",
-                            mode=NumberSelectorMode.BOX,
+                            min=1, max=60, unit_of_measurement="min", mode=NumberSelectorMode.BOX
                         )
                     ),
                 }
@@ -369,10 +375,20 @@ class IkuaiOptionsFlowHandler(config_entries.OptionsFlow):
         tracker_config = dict(self._temp_options.get(CONF_TRACKER_CONFIG, {}))
 
         if user_input is not None:
+            removed_macs = []
             for mac in user_input.get("devices_to_remove", []):
-                tracker_config.pop(mac, None)
+                if tracker_config.pop(mac, None) is not None:
+                    removed_macs.append(mac)
+
             self._temp_options[CONF_TRACKER_CONFIG] = tracker_config
+            # 事件驱动删除：实体唯一合法删除点，不依赖轮询 diff 推断（删光亦合法）。
+            if removed_macs:
+                self._async_remove_tracker_entities(removed_macs)
             return self.async_create_entry(title="", data=self._temp_options)
+
+        if not tracker_config:
+            # 空列表无法提交，无可删设备直接终止
+            return self.async_abort(reason="no_tracked_devices")
 
         current_options = [
             {"value": mac, "label": f"{conf.get('name', mac)} ({mac})"}
@@ -381,15 +397,28 @@ class IkuaiOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="remove",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional("devices_to_remove"): SelectSelector(
-                        SelectSelectorConfig(
-                            options=current_options,
-                            multiple=True,
-                            mode=SelectSelectorMode.LIST,
-                        )
+            data_schema=vol.Schema({
+                vol.Optional("devices_to_remove"): SelectSelector(
+                    SelectSelectorConfig(
+                        options=current_options,
+                        multiple=True,
+                        mode=SelectSelectorMode.LIST,
                     )
-                }
-            ),
+                )
+            }),
         )
+
+    @callback
+    def _async_remove_tracker_entities(self, removed_macs: list[str]) -> None:
+        """删除被移除设备对应的追踪实体."""
+        ent_reg = er.async_get(self.hass)
+        removed_clean = {normalize_mac(mac).replace(":", "") for mac in removed_macs}
+        for entity in er.async_entries_for_config_entry(
+            ent_reg, self.config_entry.entry_id
+        ):
+            if entity.domain != "device_tracker" or "_track_" not in entity.unique_id:
+                continue
+            # uid 形如 {gwid}_track_{mac_clean}，末段即无冒号小写 MAC
+            if entity.unique_id.rsplit("_track_", 1)[-1] in removed_clean:
+                LOGGER.info("移除追踪实体: %s", entity.entity_id)
+                ent_reg.async_remove(entity.entity_id)
